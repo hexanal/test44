@@ -1,25 +1,8 @@
 import { Vector3 } from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import Transform from "../../components/Transform";
 
-const TEST_THINGS = [
-    {
-        id: "thing1",
-        type: "Thing",
-        position: [-1, 1.2, -3],
-        rotation: [Math.PI / 4, 0, 0],
-        scale: [1, 1, 1],
-    },
-    {
-        id: "thing2",
-        type: "Thing",
-        position: [-1, 1.2, 2],
-        rotation: [Math.PI / 4, Math.PI / 5, 0],
-        scale: [1, 1, 1],
-    },
-];
 
 function PlayerCamera(props) {
     const cameraRef = useRef();
@@ -62,7 +45,8 @@ function Ground(props) {
     );
 }
 
-function Walls(props) {
+
+function Wall(props) {
     const [wireframe, setWireframe] = useState(false);
 
     const onClick = useCallback(e => {
@@ -198,7 +182,7 @@ function Player(props) {
     // });
 
     return (
-        <object3D ref={bodyRef} position={[0, 1.2, 10]}>
+        <object3D ref={bodyRef}>
             <object3D ref={headRef}>
                 <PlayerCamera />
             </object3D>
@@ -211,16 +195,22 @@ export function Thing(props) {
 
     return (
         <mesh
+            // {...props}
             ref={ref}
+        // scale={active ? 1.5 : 1}
+        // onClick={(event) => setActive(!active)}
+        // onPointerOver={(event) => setHover(true)}
+        // onPointerOut={(event) => setHover(false)}
         >
             <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color={0x04ff88} />
+            <meshStandardMaterial />
         </mesh>
     );
     // color={hovered ? 'hotpink' : 'orange'}
 }
 
 export default function HomePage(props) {
+
     return (
         <div className="HomePage" style={{ position: "fixed", width: "100vw", height: "100vh", top: 0, left: 0, }}>
             <Canvas>
@@ -228,24 +218,8 @@ export default function HomePage(props) {
                 <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} decay={0} intensity={Math.PI} />
                 <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
                 <Player />
-                <Walls />
-
-                {TEST_THINGS.map(thingie => {
-                    const { id, type, position, rotation, scale } = thingie || {};
-
-                    return (
-                        <Fragment key={id}>
-                            <Transform
-                                position={position}
-                                rotation={rotation}
-                                scale={scale}
-                            >
-                                <Thing />
-                            </Transform>
-                        </Fragment>
-                    );
-                })}
-
+                <Thing />
+                <Wall />
                 <Ground />
             </Canvas>
         </div>
