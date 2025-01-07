@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { PointerLockControls } from "@react-three/drei";
+import { PerspectiveCamera, PointerLockControls, useHelper } from "@react-three/drei";
 import { useEditorStore } from '../stores/editor';
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { useKeyboardControls } from '../hooks/KeyboardControls';
 
@@ -16,11 +16,11 @@ export default function Player(props) {
     const headRef = useRef();
 
     const cameraRef = useRef();
-    const set = useThree(({ set }) => set);
     const size = useThree(({ size }) => size);
 
-    const { activeControls } = useEditorStore();
+    // useHelper(cameraRef, THREE.CameraHelper);
 
+    const { activeControls, activeCamera } = useEditorStore();
     const [locked, setLocked] = useState(false);
 
     const onLock = useCallback(e => {
@@ -36,26 +36,23 @@ export default function Player(props) {
         const { camera } = target || {};
 
         camera.getWorldDirection(_lngDir);
+
         _latDir.copy(_lngDir);
+        _latDir.setY(0);
         _latDir.applyAxisAngle(_up, Math.PI / 2);
-    }, []);
+    }, [activeCamera]);
 
     useLayoutEffect(() => {
         if (cameraRef.current) {
             cameraRef.current.aspect = size.width / size.height
             cameraRef.current.updateProjectionMatrix()
         }
-    }, [size, props])
-
-    useLayoutEffect(() => {
-        set({ camera: cameraRef.current })
-    }, [])
+    }, [size, props]);
 
     const [_, get] = useKeyboardControls();
 
-    useFrame((state, dt) => {
+    useFrame(() => {
         if (!locked) return;
-        // const sensitivity = 0.005;
         let longitudinalSpeed = 0;
         let lateralSpeed = 0;
         let multiplier = get().MODIFIER_SHIFT ? 0.02 : 0.2;
@@ -72,7 +69,7 @@ export default function Player(props) {
         if (get().RIGHTWARD) {
             lateralSpeed = -0.5 * multiplier;
         }
-        // to implement jump... this is where things get complicated :)
+        // TODO to implement jump... this is where things get complicated :)
 
         bodyRef.current.position.addScaledVector(_lngDir, longitudinalSpeed);
         bodyRef.current.position.addScaledVector(_latDir, lateralSpeed);
@@ -81,17 +78,16 @@ export default function Player(props) {
     return (
         <object3D ref={bodyRef}>
             <object3D ref={headRef}>
-                <perspectiveCamera ref={cameraRef} />
+                <PerspectiveCamera makeDefault={activeCamera === "firstPerson"} ref={cameraRef} position={[0, 1.5, -15]} />
             </object3D>
 
-            {activeControls === 'pointer' ? (
-                <PointerLockControls
-                    selector="#canvas"
-                    onChange={onPointerLockControlsChange}
-                    onLock={onLock}
-                    onUnlock={onUnlock}
-                />
-            ) : null}
+            <PointerLockControls
+                enabled={activeControls === 'pointer'}
+                selector="#canvas"
+                onChange={onPointerLockControlsChange}
+                onLock={onLock}
+                onUnlock={onUnlock}
+            />
         </object3D >
     );
 }

@@ -1,64 +1,66 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { TransformControls } from '@react-three/drei';
-import { Object3D, Box3, Box3Helper, Vector3, Euler } from 'three';
+import { Object3D, Box3, Box3Helper } from 'three';
 import { useFrame } from '@react-three/fiber';
+
+// import { useBox } from '@react-three/cannon';
 
 import { useKeyboardControls } from '../../hooks/KeyboardControls';
 
 export default function Transform(props) {
   const {
-    showAxesHelper = true,
-    showBoundingBox = true,
-
-    // position = [0, 0, 0],
-    rotation = [0, 0, 0],
-    scale = [0, 0, 0],
-    // mode = "translate",
+    showAxesHelper = false,
+    showBoundingBox = false,
+    object,
     children,
   } = props || {};
 
-  const ref = useRef(new Object3D());
-  const wrapperRef = useRef(new Object3D());
+  const axesHelperRef = useRef();
   const box3Ref = useRef(new Box3());
   const box3HelperRef = useRef(new Box3Helper());
 
+  const transformModeRef = useRef();
   const [transformMode, setTransformMode] = useState("translate");
-  const [sub, get] = useKeyboardControls();
 
-  useEffect(() => {
-    return sub(state => state.MODIFIER_SHIFT, pressed => {
-      setTransformMode(pressed ? "rotate" : "translate");
-    });
-  }, [setTransformMode]);
+  const [_, get] = useKeyboardControls();
 
   useFrame((t, dt, xrFrame) => {
-    box3Ref.current.setFromObject(wrapperRef.current);
-    box3HelperRef.current.box = box3Ref.current;
+    if (showBoundingBox) {
+      box3Ref.current.setFromObject(object.current);
+      box3HelperRef.current.box = box3Ref.current;
+    }
+    if (showAxesHelper) {
+      axesHelperRef.current.position.copy(object.current.position);
+    }
+
+    const nextMode = get().MODIFIER_SHIFT ? "rotate" : "translate";
+    if (nextMode !== transformModeRef.current) {
+      setTransformMode(nextMode);
+    }
+    transformModeRef.current = nextMode;
   });
 
+  // TODO
+  // const onChangeTransform = useCallback((e) => {
+  //   const { target } = e || {};
+  //   console.log(target)
+  // }, []);
+
   return (
-    <group>
+    <group
+    >
       {showBoundingBox ? (
         <box3Helper ref={box3HelperRef} args={[box3Ref.current, 0x00ffff]} />
       ) : null}
 
-      {/* <TransformControls mode={transformMode} onChange={onChangeTransform}> */}
-      <TransformControls mode={transformMode.current}>
-        <object3D
-        // ref={ref}
-        // position={position}
-        // rotation={rotation}
-        // scale={scale}
-        >
-          {showAxesHelper ? (
-            <axesHelper args={[2]} />
-          ) : null}
+      {showAxesHelper ? (
+        <axesHelper ref={axesHelperRef} args={[2]} />
+      ) : null}
 
-          <object3D ref={wrapperRef}>
-            {children}
-          </object3D>
-        </object3D>
-      </TransformControls>
+      <TransformControls
+        mode={transformMode}
+        object={object}
+      />
     </group>
   );
 }

@@ -95,8 +95,8 @@ export function KeyboardControls({ map, children, onChange, domElement }: Keyboa
       if (up || !pressed) fn(true)
     }
 
-    const upHandler = ({ key, code }: KeyboardEvent) => {
-      const obj = keyMap[key] || keyMap[code] || keyMap['shiftKey'] || keyMap['altKey'];
+    const upHandler = ({ key, code, shiftKey, altKey, optionKey }: KeyboardEvent) => {
+      const obj = keyMap[key] || keyMap[code] || (!shiftKey && keyMap['shiftKey']) || (!altKey && keyMap['altKey']);
       if (!obj) return
       const { fn, up } = obj
       obj.pressed = false

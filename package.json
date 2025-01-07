@@ -1,7 +1,7 @@
 {
   "name": "test44",
-  "version": "1.0.0",
-  "description": "FPS proto",
+  "version": "0.0.1",
+  "description": "Kitchensink @react-three/fiber @react-three/drei +",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
   "author": "Fred Mercy",
   "license": "ISC",
   "dependencies": {
+    "@react-three/cannon": "^6.6.0",
     "@react-three/drei": "^9.120.5",
     "@react-three/fiber": "^8.17.10",
     "@types/three": "^0.171.0",
