@@ -24,21 +24,21 @@ export default function Transform(props) {
 
   const [_, get] = useKeyboardControls();
 
-  useFrame((t, dt, xrFrame) => {
-    if (showBoundingBox) {
-      box3Ref.current.setFromObject(object.current);
-      box3HelperRef.current.box = box3Ref.current;
-    }
-    if (showAxesHelper) {
-      axesHelperRef.current.position.copy(object.current.position);
-    }
+  // useFrame((t, dt, xrFrame) => {
+  //   if (showBoundingBox) {
+  //     box3Ref.current.setFromObject(object.current);
+  //     box3HelperRef.current.box = box3Ref.current;
+  //   }
+  //   if (showAxesHelper) {
+  //     axesHelperRef.current.position.copy(object.current.position);
+  //   }
 
-    const nextMode = get().MODIFIER_SHIFT ? "rotate" : "translate";
-    if (nextMode !== transformModeRef.current) {
-      setTransformMode(nextMode);
-    }
-    transformModeRef.current = nextMode;
-  });
+  //   const nextMode = get().MODIFIER_SHIFT ? "rotate" : "translate";
+  //   if (nextMode !== transformModeRef.current) {
+  //     setTransformMode(nextMode);
+  //   }
+  //   transformModeRef.current = nextMode;
+  // });
 
   // TODO
   // const onChangeTransform = useCallback((e) => {
@@ -47,15 +47,14 @@ export default function Transform(props) {
   // }, []);
 
   return (
-    <group
-    >
-      {showBoundingBox ? (
+    <group>
+      {/* {showBoundingBox ? (
         <box3Helper ref={box3HelperRef} args={[box3Ref.current, 0x00ffff]} />
       ) : null}
 
       {showAxesHelper ? (
         <axesHelper ref={axesHelperRef} args={[2]} />
-      ) : null}
+      ) : null} */}
 
       <TransformControls
         mode={transformMode}

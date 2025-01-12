@@ -14,8 +14,9 @@ const _up = new THREE.Vector3(0, 1, 0);
 export default function Player(props) {
     const bodyRef = useRef();
     const headRef = useRef();
-
     const cameraRef = useRef();
+    const controlsRef = useRef();
+
     const size = useThree(({ size }) => size);
 
     // useHelper(cameraRef, THREE.CameraHelper);
@@ -31,6 +32,22 @@ export default function Player(props) {
         setLocked(false);
     }, [setLocked]);
 
+    // const unlock = useCallback(e => {
+    //     console.log('unlock?', controlsRef.current);
+    //     controlsRef.current.unlock();
+
+    //     onUnlock();
+    // }, [onUnlock]);
+
+    // useEffect(() => {
+    //     if (activeControls === "pointer") {
+    //         console.log('pointer mode active');
+    //         controlsRef.current.domElement.addEventListener("mouseup", unlock);
+    //     } else {
+    //         controlsRef.current.domElement.removeEventListener("mouseup", unlock);
+    //     }
+    // }, [activeControls, unlock]);
+
     const onPointerLockControlsChange = useCallback(e => {
         const { target } = e || {};
         const { camera } = target || {};
@@ -40,12 +57,15 @@ export default function Player(props) {
         _latDir.copy(_lngDir);
         _latDir.setY(0);
         _latDir.applyAxisAngle(_up, Math.PI / 2);
-    }, [activeCamera]);
+
+        // console.log(target);
+    // }, [dctiveCamera, activeControls]);
+    }, []);
 
     useLayoutEffect(() => {
         if (cameraRef.current) {
-            cameraRef.current.aspect = size.width / size.height
-            cameraRef.current.updateProjectionMatrix()
+            cameraRef.current.aspect = size.width / size.height;
+            cameraRef.current.updateProjectionMatrix();
         }
     }, [size, props]);
 
@@ -82,6 +102,7 @@ export default function Player(props) {
             </object3D>
 
             <PointerLockControls
+                ref={controlsRef}
                 enabled={activeControls === 'pointer'}
                 selector="#canvas"
                 onChange={onPointerLockControlsChange}

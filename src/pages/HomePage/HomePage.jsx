@@ -1,153 +1,53 @@
-import * as THREE from 'three';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
-import {
-    GradientTexture, // TODO
-    GradientType, // TODO
-    OrbitControls,
-    PerspectiveCamera,
-    useHelper,
-    Grid,
-    Select, // TODO
-} from '@react-three/drei';
-import { Physics, usePlane, useBox } from '@react-three/cannon';
+// import * as THREE from 'three';
+import { useCallback, useMemo, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Select, useSelect, TransformControls } from '@react-three/drei';
+import { Physics, useBox } from '@react-three/cannon';
 import KeyboardControlsProvider from "../../components/KeyboardControlsProvider";
-
 
 import { useEditorStore } from '../../stores/editor';
 
-import Transform from '../../components/Transform';
 import Player from "../../components/Player";
 
-function GridHelper(props) {
-    // TODO
-    return (
-        <Grid
-            position={[0, 0.05, 0]}
-            fadeDistance={50}
-            fadeStrength={0.5}
-            infiniteGrid
-        />
-    );
-}
-
-function Plane(props) {
-    const [ref] = usePlane(() => ({ rotation: [-Math.PI / 2, 0, 0], position: [0, 0, 0], ...props }))
-    return (
-        <mesh
-            ref={ref}
-            receiveShadow
-        >
-            <planeGeometry args={[100, 100]} />
-        </mesh>
-    )
-}
+import { Background } from './Background';
+import { Environment } from './Environment';
+import { GridHelper } from './GridHelper';
+import { Plane } from './Plane';
+import { OrbiterControls } from './OrbiterControls';
 
 export function Thing(props) {
-    const [ref] = useBox(() => ({ mass: 1.5, position: [0, 10, 0], ...props }))
+    const { position = [0, 10, 0] } = props || {};
+    const [ref] = useBox(() => ({ mass: 1.5, position, ...props }))
+    const { transformMode } = useEditorStore();
 
-
-    return (
-        <mesh ref={ref} castShadow>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color={0x04ff88} />
-        </mesh>
-    );
-}
-
-export function OrbiterControls(props) {
-    const cameraRef = useRef();
-    const size = useThree(({ size }) => size);
-    const { activeControls } = useEditorStore();
-
-    useLayoutEffect(() => {
-        if (cameraRef.current) {
-            cameraRef.current.aspect = size.width / size.height
-            cameraRef.current.updateProjectionMatrix()
-        }
-    }, [size, props]);
+    const selected = useSelect();
+    // setSelection();
 
     return (
-        <object3D>
-            <PerspectiveCamera makeDefault={activeControls === 'orbit'} name="ORBIT" ref={cameraRef} position={[0, 1, 3]} />
-            <OrbitControls enabled={activeControls === 'orbit'} camera={cameraRef.current} />
-        </object3D>
-    );
-
-}
-
-export function Background() {
-    const textureRef = useRef();
-    const scene = useThree(state => state.scene);
-
-    // TODO
-    // useTweakerSaver => ui for changing values / saving / persistenfce
-    // how to save to a structure
-
-    useEffect(() => {
-        scene.background = new THREE.Color().setRGB(1, 0.9, 1, THREE.SRGBColorSpace);
-        // TODO scene.background = textureRef.current;
-    }, [scene]);
-
-    return (
-        <>
-            {/*
-            TODO <GradientTexture
-                stops={[0, 1]} // As many stops as you want
-                colors={['aquamarine', 'hotpink']} // Colors need to match the number of stops
-                size={1024} // Size is optional, default = 1024
-            /> */}
-            {/*
-            TODO <GradientTexture
-                ref={textureRef}
-                stops={[0, 0.5, 1]} // As many stops as you want
-                colors={['aquamarine', 'hotpink', 'yellow']} // Colors need to match the number of stops
-                size={1024} // Size (height) is optional, default = 1024
-                width={1024} // Width of the canvas producing the texture, default = 16
-                type={GradientType.Radial} // The type of the gradient, default = GradientType.Linear
-                innerCircleRadius={0} // Optional, the radius of the inner circle of the gradient, default = 0
-                outerCircleRadius={'auto'} // Optional, the radius of the outer circle of the gradient, default = auto
-            /> */}
-        </>
-    );
-}
-
-export function EnvironmentDefaults() {
-    const pointLightRef = useRef();
-    const spotLightRef = useRef();
-
-    useHelper(pointLightRef, THREE.PointLightHelper);
-    useHelper(spotLightRef, THREE.SpotLightHelper);
-
-    return (
-        <>
-            <axesHelper args={[2]} />
-            <ambientLight intensity={Math.PI / 10} />
-            <Transform object={spotLightRef.current} />
-            <spotLight
-                ref={spotLightRef}
-                position={[10, 10, 10]}
-                angle={0.15}
-                penumbra={2}
-                decay={0}
-                intensity={Math.PI}
-                castShadow
-            />
-
-            <Transform object={pointLightRef.current} />
-            <pointLight
-                ref={pointLightRef}
-                position={[-10, 3, 10]}
-                decay={0.1}
-                intensity={Math.PI / 2}
-                castShadow
-            />
-        </>
+        <TransformControls
+            mode={transformMode}
+            object={ref}
+            // makeDefault={selected}
+        >
+            <mesh ref={ref} castShadow>
+                <boxGeometry args={[1, 1, 1]} />
+                <meshStandardMaterial color={0x04ff88} />
+            </mesh>
+        </TransformControls>
     );
 }
 
 export default function HomePage(props) {
-    const { showGrid, setShowGrid, activeControls, setActiveControls, setActiveCamera } = useEditorStore();
+    const { showGrid, setShowGrid, activeControls,
+        boxSelectActive,
+        setBoxSelectActive,
+        setActiveControls,
+        setActiveCamera,
+        transformMode,
+        // setTransformMode,
+    } = useEditorStore();
+
+    const [selection, setSelection] = useState(null);
 
     const onChangeActiveControls = useCallback((e) => {
         const { target } = e || {};
@@ -156,9 +56,34 @@ export default function HomePage(props) {
         setActiveCamera(value === "pointer" ? "firstPerson" : "orthographic");
     }, [setActiveControls, setActiveCamera]);
 
-    const onSelect = useCallback((e) => {
-        console.log(e);
-    }, []);
+    const onChangePointerUpSelect = useCallback((e) => {
+        const [newObject = null] = e || [];
+
+        setSelection(newObject);
+    }, [transformMode, selection, setSelection]);
+
+    const onClickSelect = useCallback((e) => {
+        const { object = null } = e || {};
+
+        let newObject = object;
+
+        console.log({ e, selection });
+
+        // if (sel.length === 0) {
+        //     newObject = null;
+        // }
+
+        setSelection(newObject);
+
+        // TODO handle select multiple
+        // if (sel.length > 1) {
+        //     setSelection(sel[0]);
+        // }
+    }, [transformMode, selection, setSelection]);
+
+    const { name, type } = useMemo(() => {
+        return selection || {};
+    }, [selection])
 
     return (
         <KeyboardControlsProvider>
@@ -180,10 +105,22 @@ export default function HomePage(props) {
 
                     <div>
                         <label>
-                            <input type="checkbox" name="toggleGrid" checked={showGrid} onChange={() => setShowGrid(prev => !prev)} />
+                            <input type="checkbox" name="toggleGrid" value={showGrid} onChange={() => setShowGrid(prev => !prev)} />
                             Toggle Grid
                         </label>
+                        <label>
+                            <input type="checkbox" name="toggleBoxSelect" value={boxSelectActive} onChange={() => setBoxSelectActive(prev => !prev)} />
+                            Box select active
+                        </label>
                     </div>
+
+                    {selection ? (
+                        <div>
+                            Selection:
+                            <pre>name: {name} / type: {type}</pre>
+                            {/* Selection: {selection} */}
+                        </div>
+                    ) : null}
                 </div>
 
                 <div id="canvas" style={{ position: "fixed", zIndex: 1, width: "100vw", height: "100vh", top: 0, left: 0, }}>
@@ -191,20 +128,27 @@ export default function HomePage(props) {
                     <div style={{ position: "absolute", zIndex: 1, top: "50%", left: "50%", width: "32px", height: "1px", backgroundColor: "rgb(0 0 0 / 1)", transform: "translate(-50%, -50%)" }} />
 
                     <Canvas>
+                        {/* {selection ? <TransformControls
+                            mode={transformMode}
+                            object={selection}
+                        >
+                        </TransformControls>
+                            : null} */}
+
                         <Background />
-                        <EnvironmentDefaults />
+                        <Environment />
 
                         <Physics>
                             <Player />
 
-                            {/* 
-                            TODO
-                            get transform as "useTransformHGizmo" in Thing
-                            get selectable, as "useSelect" / or custom 
-                            ... etc
-                            */}
-
-                            <Thing />
+                            <Select
+                                box={boxSelectActive}
+                                onClick={onClickSelect}
+                                onChangePointerUp={onChangePointerUpSelect}
+                            // onChange={onChange}
+                            >
+                                <Thing />
+                            </Select>
 
                             <Plane />
                         </Physics>
