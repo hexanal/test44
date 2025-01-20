@@ -1,65 +1,47 @@
-import { useRef, useState } from 'react';
-import { TransformControls } from '@react-three/drei';
-import { Object3D, Box3, Box3Helper } from 'three';
+import * as THREE from 'three';
+import { useCallback, useRef, useState } from 'react';
+import { Html, TransformControls, useHelper } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 
 // import { useBox } from '@react-three/cannon';
 
 import { useKeyboardControls } from '../../hooks/KeyboardControls';
+import { useEditorStore } from '../../stores/editor';
 
 export default function Transform(props) {
+  const { id = 'untitled', object, children } = props || {};
   const {
-    showAxesHelper = false,
-    showBoundingBox = false,
-    object,
-    children,
-  } = props || {};
-
-  const axesHelperRef = useRef();
-  const box3Ref = useRef(new Box3());
-  const box3HelperRef = useRef(new Box3Helper());
-
-  const transformModeRef = useRef();
-  const [transformMode, setTransformMode] = useState("translate");
-
+    selected,
+    transformMode,
+    setTransformMode,
+  } = useEditorStore();
   const [_, get] = useKeyboardControls();
+  const ref = useRef(new THREE.Object3D());
 
-  // useFrame((t, dt, xrFrame) => {
-  //   if (showBoundingBox) {
-  //     box3Ref.current.setFromObject(object.current);
-  //     box3HelperRef.current.box = box3Ref.current;
-  //   }
-  //   if (showAxesHelper) {
-  //     axesHelperRef.current.position.copy(object.current.position);
-  //   }
+  useFrame(() => {
+    if (!object) return;
 
-  //   const nextMode = get().MODIFIER_SHIFT ? "rotate" : "translate";
-  //   if (nextMode !== transformModeRef.current) {
-  //     setTransformMode(nextMode);
-  //   }
-  //   transformModeRef.current = nextMode;
-  // });
-
-  // TODO
-  // const onChangeTransform = useCallback((e) => {
-  //   const { target } = e || {};
-  //   console.log(target)
-  // }, []);
+    if (get().ROTATE_OBJECT) {
+      setTransformMode('rotate');
+    }
+    if (get().SCALE_OBJECT) {
+      setTransformMode('scale');
+    }
+    if (get().TRANSLATE_OBJECT) {
+      setTransformMode('translate');
+    }
+  });
 
   return (
-    <group>
-      {/* {showBoundingBox ? (
-        <box3Helper ref={box3HelperRef} args={[box3Ref.current, 0x00ffff]} />
-      ) : null}
-
-      {showAxesHelper ? (
-        <axesHelper ref={axesHelperRef} args={[2]} />
-      ) : null} */}
-
+    <>
       <TransformControls
         mode={transformMode}
-        object={object}
+        object={selected}
+        // showX={object == selected}
+        // showY={object == selected}
+        // showZ={object == selected}
       />
-    </group>
+      {children}
+    </>
   );
 }

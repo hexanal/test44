@@ -1,163 +1,195 @@
-// import * as THREE from 'three';
-import { useCallback, useMemo, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Select, useSelect, TransformControls } from '@react-three/drei';
+import * as THREE from 'three';
+import { Fragment, forwardRef, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+// import { Select, useSelect, TransformControls, Html } from '@react-three/drei';
+import { Sky } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Physics, useBox } from '@react-three/cannon';
+
 import KeyboardControlsProvider from "../../components/KeyboardControlsProvider";
-
-import { useEditorStore } from '../../stores/editor';
-
 import Player from "../../components/Player";
+import Transform from "../../components/Transform";
 
 import { Background } from './Background';
 import { Environment } from './Environment';
-import { GridHelper } from './GridHelper';
 import { Plane } from './Plane';
 import { OrbiterControls } from './OrbiterControls';
+import { FloatingBox } from './FloatingBox';
+import { AnimatedObject } from './AnimatedObject';
+import { AnimatedBox } from './AnimatedBox';
 
-export function Thing(props) {
-    const { position = [0, 10, 0] } = props || {};
-    const [ref] = useBox(() => ({ mass: 1.5, position, ...props }))
-    const { transformMode } = useEditorStore();
+import { useEditorStore } from '../../stores/editor';
 
-    const selected = useSelect();
-    // setSelection();
+import Knob from "../../components/Knob";
+import Fader from "../../components/Fader";
+import { TweakerPanel } from "../../components/TweakerPanel";
+
+export function Selectable(props) {
+    const { children, onSelect } = props || {};
+    const { setSelected } = useEditorStore();
+
+    const onClick = useCallback((e) => {
+        const { object: targetObject } = e || {};
+        setSelected(targetObject);
+        if (onSelect) onSelect(targetObject);
+    }, [setSelected]);
 
     return (
-        <TransformControls
-            mode={transformMode}
-            object={ref}
-            // makeDefault={selected}
-        >
-            <mesh ref={ref} castShadow>
-                <boxGeometry args={[1, 1, 1]} />
-                <meshStandardMaterial color={0x04ff88} />
-            </mesh>
-        </TransformControls>
+        <object3D onClick={onClick}>
+            {children}
+        </object3D>
     );
 }
 
+function getRandomValue(min, max) {
+    return Math.random() * (max - min) + min;
+}
+function getRandomColor() {
+    return Math.floor(Math.random() * 16777215);
+}
+function getRandomPosition() {
+    return [getRandomValue(-5, 5), getRandomValue(0, 2), getRandomValue(-5, 5)];
+}
+
+function createRandomThing(id) {
+    return {
+        id,
+        position: getRandomPosition(),
+        color: getRandomColor(),
+        scale: [getRandomValue(0.5, 1.5), getRandomValue(0.5, 1.5), getRandomValue(0.5, 1.5)],
+        rotation: [getRandomValue(0, Math.PI), getRandomValue(0, Math.PI), getRandomValue(0, Math.PI)],
+    };
+}
+
+const THINGS = Array.from({ length: 10 }, (_, index) => createRandomThing(`randomThing${index + 1}`));
+
+export function Thing(props) {
+    const { id, position, color = 0x000000, scale, rotation, onSelect } = props || {};
+    const ref = useRef();
+    const { selected } = useEditorStore();
+
+    return (
+        <>
+            <Selectable onSelect={onSelect}>
+                <mesh
+                    ref={ref}
+                    name={id}
+                    position={position}
+                    scale={scale}
+                    rotation={rotation}
+                    // castShadow
+                    // receiveShadow
+                >
+                    <boxGeometry args={[1, 1, 1]} />
+                    {selected === ref.current ? (
+                        <meshBasicMaterial color={color} />
+                    ) : (
+                        <meshStandardMaterial color={color} />
+                    )}
+                </mesh>
+            </Selectable>
+        </>
+    );
+}
+
+
 export default function HomePage(props) {
-    const { showGrid, setShowGrid, activeControls,
-        boxSelectActive,
-        setBoxSelectActive,
-        setActiveControls,
-        setActiveCamera,
-        transformMode,
-        // setTransformMode,
-    } = useEditorStore();
+    const [endScale, setEndScale] = useState(1);
 
-    const [selection, setSelection] = useState(null);
-
-    const onChangeActiveControls = useCallback((e) => {
-        const { target } = e || {};
-        const { value } = target || {};
-        setActiveControls(value);
-        setActiveCamera(value === "pointer" ? "firstPerson" : "orthographic");
-    }, [setActiveControls, setActiveCamera]);
-
-    const onChangePointerUpSelect = useCallback((e) => {
-        const [newObject = null] = e || [];
-
-        setSelection(newObject);
-    }, [transformMode, selection, setSelection]);
-
-    const onClickSelect = useCallback((e) => {
-        const { object = null } = e || {};
-
-        let newObject = object;
-
-        console.log({ e, selection });
-
-        // if (sel.length === 0) {
-        //     newObject = null;
-        // }
-
-        setSelection(newObject);
-
-        // TODO handle select multiple
-        // if (sel.length > 1) {
-        //     setSelection(sel[0]);
-        // }
-    }, [transformMode, selection, setSelection]);
-
-    const { name, type } = useMemo(() => {
-        return selection || {};
-    }, [selection])
 
     return (
         <KeyboardControlsProvider>
-            <div className="HomePage">
-                <div style={{ position: "absolute", zIndex: 2, top: 0, left: 0, backgroundColor: "rgb(0 0 0 / 0.2)" }}>
-                    Current: <pre>{activeControls}</pre>
-                    <label>
-                        <input type="radio" name="activeControls" value="pointer" checked={activeControls === "pointer"} onChange={onChangeActiveControls} />
-                        FPS (pointer locked)
-                    </label>
-                    <label>
-                        <input type="radio" name="activeControls" value="orbit" checked={activeControls === "orbit"} onChange={onChangeActiveControls} />
-                        Orbit
-                    </label>
-                    <label>
-                        <input type="radio" name="activeControls" value="off" checked={activeControls === "off"} onChange={onChangeActiveControls} />
-                        Off
-                    </label>
+            <div style={{ position: "absolute", zIndex: 2, top: "0.25rem", right: "0.25rem", backgroundColor: "rgb(255 255 255 / 1)" }}>
+                {/* <Fader
+                    label={"Timeline"}
+                    value={endScale}
+                    onChange={setEndScale}
+                    min={0.1}
+                    max={4}
+                    minAngle={-140}
+                    maxAngle={140}
+                    withCurrentValueIndicator
+                /> */}
+                <Knob
+                    label={"End Scale"}
+                    value={endScale}
+                    onChange={setEndScale}
+                    min={0.1}
+                    max={4}
+                    minAngle={-140}
+                    maxAngle={140}
+                    withCurrentValueIndicator
+                />
+            </div>
+            <TweakerPanel />
 
-                    <div>
-                        <label>
-                            <input type="checkbox" name="toggleGrid" value={showGrid} onChange={() => setShowGrid(prev => !prev)} />
-                            Toggle Grid
-                        </label>
-                        <label>
-                            <input type="checkbox" name="toggleBoxSelect" value={boxSelectActive} onChange={() => setBoxSelectActive(prev => !prev)} />
-                            Box select active
-                        </label>
-                    </div>
+            <div id="canvas" style={{ position: "fixed", zIndex: 1, width: "100vw", height: "100vh", top: 0, left: 0, }}>
+                {/* 
+                TODO: 
 
-                    {selection ? (
-                        <div>
-                            Selection:
-                            <pre>name: {name} / type: {type}</pre>
-                            {/* Selection: {selection} */}
-                        </div>
-                    ) : null}
-                </div>
+                -> try and duplicate the structure of Voyager but with react components
+                -> try to use as many drei components as possible
+                -> quick and dirty
+                -> test performances
+                    -> framerate metrics
+                    -> benchmarks
+                */}
 
-                <div id="canvas" style={{ position: "fixed", zIndex: 1, width: "100vw", height: "100vh", top: 0, left: 0, }}>
-                    <div style={{ position: "absolute", zIndex: 1, top: "50%", left: "50%", width: "1px", height: "32px", backgroundColor: "rgb(0 0 0 / 1)", transform: "translate(-50%, -50%)" }} />
-                    <div style={{ position: "absolute", zIndex: 1, top: "50%", left: "50%", width: "32px", height: "1px", backgroundColor: "rgb(0 0 0 / 1)", transform: "translate(-50%, -50%)" }} />
+                <Canvas shadows>
+                    <scene>
+                        <Transform />
 
-                    <Canvas>
-                        {/* {selection ? <TransformControls
-                            mode={transformMode}
-                            object={selection}
-                        >
-                        </TransformControls>
-                            : null} */}
 
                         <Background />
+                        <Sky />
                         <Environment />
 
                         <Physics>
-                            <Player />
-
-                            <Select
-                                box={boxSelectActive}
-                                onClick={onClickSelect}
-                                onChangePointerUp={onChangePointerUpSelect}
-                            // onChange={onChange}
+                            {/*
+                        <Html
+                                center
+                                transform
+                                sprite
                             >
-                                <Thing />
-                            </Select>
+                                <Knob
+                                    label={"FOV"}
+                                    value={fpsCameraFOV}
+                                    onChange={setFpsCameraFOV}
+                                    min={10}
+                                    max={120}
+                                    minAngle={-100}
+                                    maxAngle={100}
+                                    withCurrentValueIndicator
+                                />
+                        </Html>
+                        */}
+
+                            <Player />
+                            {THINGS.map((thing) => (
+                                <Thing key={thing.id} {...thing} />
+                            ))}
+
+                            {/* <AnimatedObject
+                            startPosition={[2.5, 0, 2.5]}
+                            endPosition={[2.5, 3, 2.5]}
+                            startScale={[1, 1, 1]}
+                            endScale={[endScale, endScale, endScale]}
+                            duration={5}
+                            delay={0}
+                            loop={THREE.LoopPingPong}
+                        >
+                            <mesh>
+                                <boxGeometry />
+                                <meshBasicMaterial color="royalblue" />
+                            </mesh>
+                        </AnimatedObject> */}
 
                             <Plane />
                         </Physics>
                         <OrbiterControls />
 
-                        {showGrid ? <GridHelper /> : null}
-                    </Canvas>
-                </div>
+                    </scene>
+                </Canvas>
             </div>
-        </KeyboardControlsProvider>
+        </KeyboardControlsProvider >
     );
 }

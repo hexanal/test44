@@ -13,6 +13,12 @@ export default function KeyboardControlsProvider(props) {
     { name: "RIGHTWARD", keys: ['ArrowRight', 'KeyD'] },
     { name: "JUMP", keys: ['Space'] },
     { name: "INTERACT", keys: ['KeyE'] },
+    { name: "RELOAD", keys: ['KeyR'] },
+
+    { name: "ROTATE_OBJECT", keys: ['Digit1'] },
+    { name: "SCALE_OBJECT", keys: ['Digit2'] },
+    { name: "TRANSLATE_OBJECT", keys: ['Digit3'] },
+
     { name: "MODIFIER_SHIFT", keys: ['shiftKey'] },
     { name: "MODIFIER_ALT", keys: ['altKey'] },
   ], [])

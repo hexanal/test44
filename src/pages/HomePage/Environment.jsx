@@ -1,39 +1,23 @@
-import * as THREE from 'three';
-import { useRef } from 'react';
-import { useHelper } from '@react-three/drei';
+// import * as THREE from 'three';
+// import { useRef } from 'react';
 
-import Transform from '../../components/Transform';
+import { GridHelper } from './GridHelper';
+
+import { PointLightEntity } from './PointLightEntity';
+import { DirectionalLightEntity } from './DirectionalLightEntity';
+import { useEditorStore } from '../../stores/editor';
 
 export function Environment() {
-    const pointLightRef = useRef();
-    const spotLightRef = useRef();
-
-    useHelper(pointLightRef, THREE.PointLightHelper);
-    useHelper(spotLightRef, THREE.SpotLightHelper);
+    const { showGrid } = useEditorStore();
+    // knobs and switching and shit, for those 
 
     return (
         <>
+            {showGrid ? <GridHelper /> : null}
             <axesHelper args={[2]} />
             <ambientLight intensity={Math.PI / 10} />
-            {/* <Transform object={spotLightRef.current} /> */}
-            <spotLight
-                ref={spotLightRef}
-                position={[10, 10, 10]}
-                angle={0.15}
-                penumbra={2}
-                decay={0}
-                intensity={Math.PI}
-                castShadow
-            />
-
-            {/* <Transform object={pointLightRef.current} /> */}
-            <pointLight
-                ref={pointLightRef}
-                position={[-10, 3, 10]}
-                decay={0.1}
-                intensity={Math.PI / 2}
-                castShadow
-            />
+            <PointLightEntity />
+            <DirectionalLightEntity />
         </>
     );
 }

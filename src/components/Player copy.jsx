@@ -8,14 +8,16 @@ import useGamepads from "../hooks/useGamepads";
 import { useKeyboardControls } from "../hooks/KeyboardControls";
 import { useEditorStore } from "../stores/editor";
 
+const _lngDir = new THREE.Vector3(0, 0, -1);
 const _up = new THREE.Vector3(0, 1, 0);
+const _left = new THREE.Vector3(1, 0, 0);
 
 export default function Player(props) {
     const {
         activeControls,
         activeCamera,
         fpsCameraFOV,
-        moveForceMagnitude,
+        forceMagnitude,
         jumpForceMagnitude,
         multiplier,
         shiftMultiplier,
@@ -42,6 +44,7 @@ export default function Player(props) {
     const state = useThree((state) => state);
     const size = useThree(({ size }) => size);
 
+    const { gamepads, getGamepadInputs } = useGamepads();
     const [locked, setLocked] = useState(false);
 
     const onLock = useCallback(e => {
@@ -74,8 +77,7 @@ export default function Player(props) {
         }
     }, [size, props]);
 
-    const [_keys, getKeyboardInputs] = useKeyboardControls();
-    const [_gamepads, getGamepadInputs] = useGamepads();
+    const [_, get] = useKeyboardControls();
 
     const handleGamepadInput = useCallback((player1) => {
         const { leftStick, rightStick, buttonA } = player1 || {};
@@ -108,26 +110,26 @@ export default function Player(props) {
         let longitudinalSpeed = 0;
         let lateralSpeed = 0;
         let jumpSpeed = 0;
-        const currentMultiplier = getKeyboardInputs().MODIFIER_SHIFT ? shiftMultiplier : multiplier;
+        const currentMultiplier = get().MODIFIER_SHIFT ? shiftMultiplier : multiplier;
 
-        if (getKeyboardInputs().FORWARD) {
+        if (get().FORWARD) {
             longitudinalSpeed = 1 * currentMultiplier;
         }
-        if (getKeyboardInputs().BACKWARD) {
+        if (get().BACKWARD) {
             longitudinalSpeed = -1 * currentMultiplier;
         }
-        if (getKeyboardInputs().LEFTWARD) {
+        if (get().LEFTWARD) {
             lateralSpeed = 0.5 * currentMultiplier;
         }
-        if (getKeyboardInputs().RIGHTWARD) {
+        if (get().RIGHTWARD) {
             lateralSpeed = -0.5 * currentMultiplier;
         }
-        if (getKeyboardInputs().JUMP) {
+        if (get().JUMP) {
             jumpSpeed = 1 * jumpForceMagnitude;
         }
 
         return { longitudinalSpeed, lateralSpeed, jumpSpeed };
-    }, [getKeyboardInputs, multiplier, shiftMultiplier, jumpForceMagnitude]);
+    }, [get, multiplier, shiftMultiplier, jumpForceMagnitude]);
 
     useFrame(() => {
         let longitudinalForce = 0;
@@ -155,8 +157,8 @@ export default function Player(props) {
             jumpForce = forces.jumpSpeed;
         }
 
-        const longitudinalVector = _lngDir.current.clone().multiplyScalar(longitudinalForce * moveForceMagnitude);
-        const lateralVector = _latDir.current.clone().multiplyScalar(lateralForce * moveForceMagnitude);
+        const longitudinalVector = _lngDir.current.clone().multiplyScalar(longitudinalForce * forceMagnitude);
+        const lateralVector = _latDir.current.clone().multiplyScalar(lateralForce * forceMagnitude);
         const jumpVector = new THREE.Vector3(0, jumpForce, 0);
         api.applyForce(longitudinalVector.toArray(), [0, 0, 0]);
         api.applyForce(lateralVector.toArray(), [0, 0, 0]);
@@ -166,6 +168,7 @@ export default function Player(props) {
     return (
         <object3D ref={bodyRef} >
             <mesh position={[0, 10, 0]} visible={activeCamera !== 'firstPerson'}>
+                {/* <sphereGeometry args={[0.5, 32, 32]} /> */}
                 <boxGeometry args={[1, 1.8, 1]} />
                 <meshBasicMaterial wireframe />
             </mesh>
