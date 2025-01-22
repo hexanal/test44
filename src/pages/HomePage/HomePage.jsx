@@ -69,9 +69,15 @@ const THINGS = Array.from({ length: 10 }, (_, index) => createRandomThing(`rando
  * - Optimize performance for larger scenes.
  */
 export default function HomePage(props) {
-    const { DEBUG, setDEBUG, showSky, setShowSky, activeCamera, setActiveCamera, activeControls, setActiveControls } = useEditorStore();
+    const { DEBUG,
 
-    useControls({
+        // add leva controls for the following two lines' values, under folder Physics
+        gravity, iterations, tolerance, allowSleep,
+        setGravity, setIterations, setTolerance, setAllowSleep,
+
+        setDEBUG, showSky, setShowSky, activeCamera, setActiveCamera, activeControls, setActiveControls } = useEditorStore();
+
+    useControls('General', {
         DEBUG: {
             value: DEBUG,
             onChange: (value) => setDEBUG(value),
@@ -89,6 +95,22 @@ export default function HomePage(props) {
         ShowSky: {
             value: showSky,
             onChange: (value) => setShowSky(value),
+        },
+        Gravity: {
+            value: gravity,
+            onChange: (value) => setGravity(value),
+        },
+        Iterations: {
+            value: iterations,
+            onChange: (value) => setIterations(value),
+        },
+        Tolerance: {
+            value: tolerance,
+            onChange: (value) => setTolerance(value),
+        },
+        AllowSleep: {
+            value: allowSleep,
+            onChange: (value) => setAllowSleep(value),
         },
     });
 
@@ -108,7 +130,13 @@ export default function HomePage(props) {
                                 <meshBasicMaterial wireframe color={0x00ff00} />
                             </mesh>
                         </Selectable>
-                        <Physics>
+                        <Physics
+                            gravity={gravity}
+                            iterations={iterations}
+                            tolerance={tolerance}
+                            allowSleep={allowSleep}
+                            // floorContactEquationStiffness={1e8}
+                        >
                             {/*
                         <Html
                                 center

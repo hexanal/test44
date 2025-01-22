@@ -1,8 +1,21 @@
 import { create } from 'zustand';
 
 export const useEditorStore = create((set) => ({
+
     DEBUG: false,
     setDEBUG: (value) => set({ DEBUG: value }),
+
+    gravity: [0, -9.81, 0],
+    setGravity: (value) => set({ gravity: value }),
+    
+    iterations: 10,
+    setIterations: (value) => set({ iterations: value }),
+    
+    tolerance: 0.001,
+    setTolerance: (value) => set({ tolerance: value }),
+    
+    allowSleep: true,
+    setAllowSleep: (value) => set({ allowSleep: value }),
 
     showReticle: true,
     setShowReticle: (value) => set({ showReticle: value }),
@@ -27,25 +40,25 @@ export const useEditorStore = create((set) => ({
     transformMode: "translate",
     setTransformMode: (mode) => set({ transformMode: mode }),
 
-    fpsCameraFOV: 35,
+    fpsCameraFOV: 50,
     setFpsCameraFOV: (value) => set({ fpsCameraFOV: value }),
 
     selected: null,
     setSelected: (object) => set({ selected: object }),
-    
+
     showBoundingBox: true,
     toggleShowBoundingBox: () => set((state) => ({ showBoundingBox: !state.showBoundingBox })),
 
     showAxesHelper: true,
     toggleShowAxesHelper: () => set((state) => ({ showAxesHelper: !state.showAxesHelper })),
 
-    linearDamping: 0.7,
+    linearDamping: 0.1,
     setLinearDamping: (value) => set({ linearDamping: value }),
 
-    angularDamping: 0.9,
+    angularDamping: 0.99,
     setAngularDamping: (value) => set({ angularDamping: value }),
 
-    moveForceMagnitude: 35,
+    moveForceMagnitude: 5,
     setMoveForceMagnitude: (value) => set({ moveForceMagnitude: value }),
 
     jumpForceMagnitude: 10,
