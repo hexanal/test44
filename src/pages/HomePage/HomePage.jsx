@@ -1,44 +1,27 @@
-import * as THREE from 'three';
+// import * as THREE from 'three';
+import { useControls } from 'leva';
 import { Fragment, forwardRef, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // import { Select, useSelect, TransformControls, Html } from '@react-three/drei';
-import { Sky } from '@react-three/drei';
+import { Html, Sky } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Physics, useBox } from '@react-three/cannon';
 
 import KeyboardControlsProvider from "../../components/KeyboardControlsProvider";
 import Player from "../../components/Player";
 import Transform from "../../components/Transform";
+import { Selectable } from '../../components/Selectable';
+import { Thing } from '../../components/Thing';
 
 import { Background } from './Background';
 import { Environment } from './Environment';
 import { Plane } from './Plane';
 import { OrbiterControls } from './OrbiterControls';
-import { FloatingBox } from './FloatingBox';
-import { AnimatedObject } from './AnimatedObject';
-import { AnimatedBox } from './AnimatedBox';
+
+// import { FloatingBox } from './FloatingBox';
+// import { AnimatedObject } from './AnimatedObject';
+// import { AnimatedBox } from './AnimatedBox';
 
 import { useEditorStore } from '../../stores/editor';
-
-import Knob from "../../components/Knob";
-import Fader from "../../components/Fader";
-import { TweakerPanel } from "../../components/TweakerPanel";
-
-export function Selectable(props) {
-    const { children, onSelect } = props || {};
-    const { setSelected } = useEditorStore();
-
-    const onClick = useCallback((e) => {
-        const { object: targetObject } = e || {};
-        setSelected(targetObject);
-        if (onSelect) onSelect(targetObject);
-    }, [setSelected]);
-
-    return (
-        <object3D onClick={onClick}>
-            {children}
-        </object3D>
-    );
-}
 
 function getRandomValue(min, max) {
     return Math.random() * (max - min) + min;
@@ -62,87 +45,69 @@ function createRandomThing(id) {
 
 const THINGS = Array.from({ length: 10 }, (_, index) => createRandomThing(`randomThing${index + 1}`));
 
-export function Thing(props) {
-    const { id, position, color = 0x000000, scale, rotation, onSelect } = props || {};
-    const ref = useRef();
-    const { selected } = useEditorStore();
-
-    return (
-        <>
-            <Selectable onSelect={onSelect}>
-                <mesh
-                    ref={ref}
-                    name={id}
-                    position={position}
-                    scale={scale}
-                    rotation={rotation}
-                    // castShadow
-                    // receiveShadow
-                >
-                    <boxGeometry args={[1, 1, 1]} />
-                    {selected === ref.current ? (
-                        <meshBasicMaterial color={color} />
-                    ) : (
-                        <meshStandardMaterial color={color} />
-                    )}
-                </mesh>
-            </Selectable>
-        </>
-    );
-}
-
-
+/**
+ * HomePage component renders a 3D scene using react-three-fiber and other related libraries.
+ * It provides controls for debugging, camera selection, and control modes.
+ * 
+ * @component
+ * @param {Object} props - The properties passed to the component.
+ * @returns {JSX.Element} The rendered HomePage component.
+ * 
+ * @example
+ * <HomePage />
+ * 
+ * @remarks
+ * This component uses the following hooks and components:
+ * - `useEditorStore`: Custom hook to manage editor state.
+ * - `useControls`: Hook to create UI controls for debugging and settings.
+ * - `KeyboardControlsProvider`: Context provider for keyboard controls.
+ * - `Canvas`: Main canvas for rendering 3D content.
+ * - `Transform`, `Background`, `Environment`, `Selectable`, `Physics`, `Player`, `Thing`, `Plane`, `OrbiterControls`: Custom components for various 3D elements and functionalities.
+ * 
+ * @todo
+ * - Implement additional features and controls as needed.
+ * - Optimize performance for larger scenes.
+ */
 export default function HomePage(props) {
-    const [endScale, setEndScale] = useState(1);
+    const { DEBUG, setDEBUG, showSky, setShowSky, activeCamera, setActiveCamera, activeControls, setActiveControls } = useEditorStore();
 
+    useControls({
+        DEBUG: {
+            value: DEBUG,
+            onChange: (value) => setDEBUG(value),
+        },
+        ActiveCamera: {
+            value: activeCamera,
+            options: ['firstPerson', 'orbit'],
+            onChange: (value) => setActiveCamera(value),
+        },
+        ActiveControls: {
+            value: activeControls,
+            options: ['pointer', 'orbit', 'off'],
+            onChange: (value) => setActiveControls(value),
+        },
+        ShowSky: {
+            value: showSky,
+            onChange: (value) => setShowSky(value),
+        },
+    });
 
     return (
         <KeyboardControlsProvider>
-            <div style={{ position: "absolute", zIndex: 2, top: "0.25rem", right: "0.25rem", backgroundColor: "rgb(255 255 255 / 1)" }}>
-                {/* <Fader
-                    label={"Timeline"}
-                    value={endScale}
-                    onChange={setEndScale}
-                    min={0.1}
-                    max={4}
-                    minAngle={-140}
-                    maxAngle={140}
-                    withCurrentValueIndicator
-                /> */}
-                <Knob
-                    label={"End Scale"}
-                    value={endScale}
-                    onChange={setEndScale}
-                    min={0.1}
-                    max={4}
-                    minAngle={-140}
-                    maxAngle={140}
-                    withCurrentValueIndicator
-                />
-            </div>
-            <TweakerPanel />
-
             <div id="canvas" style={{ position: "fixed", zIndex: 1, width: "100vw", height: "100vh", top: 0, left: 0, }}>
-                {/* 
-                TODO: 
-
-                -> try and duplicate the structure of Voyager but with react components
-                -> try to use as many drei components as possible
-                -> quick and dirty
-                -> test performances
-                    -> framerate metrics
-                    -> benchmarks
-                */}
-
                 <Canvas shadows>
                     <scene>
                         <Transform />
-
-
                         <Background />
-                        <Sky />
+                        {showSky ? <Sky /> : null}
                         <Environment />
 
+                        <Selectable>
+                            <mesh position={[0, 0, 0]}>
+                                <boxGeometry args={[1, 1, 1]} />
+                                <meshBasicMaterial wireframe color={0x00ff00} />
+                            </mesh>
+                        </Selectable>
                         <Physics>
                             {/*
                         <Html
@@ -169,14 +134,14 @@ export default function HomePage(props) {
                             ))}
 
                             {/* <AnimatedObject
-                            startPosition={[2.5, 0, 2.5]}
-                            endPosition={[2.5, 3, 2.5]}
-                            startScale={[1, 1, 1]}
-                            endScale={[endScale, endScale, endScale]}
-                            duration={5}
-                            delay={0}
-                            loop={THREE.LoopPingPong}
-                        >
+                                startPosition={[2.5, 0, 2.5]}
+                                endPosition={[2.5, 3, 2.5]}
+                                startScale={[1, 1, 1]}
+                                endScale={[endScale, endScale, endScale]}
+                                duration={5}
+                                delay={0}
+                                loop={THREE.LoopPingPong}
+                            >
                             <mesh>
                                 <boxGeometry />
                                 <meshBasicMaterial color="royalblue" />

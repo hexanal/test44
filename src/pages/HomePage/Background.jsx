@@ -1,29 +1,29 @@
-import * as THREE from 'three';
+// import * as THREE from 'three';
 import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
+import { Html, GradientTexture, useCubeTexture } from '@react-three/drei';
+import { useEditorStore } from '../../stores/editor';
 
 export function Background() {
-    // const textureRef = useRef();
-    const scene = useThree(state => state.scene);
-
-    // TODO
-    // useTweakerSaver => ui for changing values / saving / persistenfce
-    // how to save to a structure
+    const { scene } = useThree();
+    const { DEBUG } = useEditorStore();
+    const cubeTexture = useCubeTexture(
+        ['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png'],
+        { path: '/assets/hdri/MEADOW2/' }
+    );
 
     useEffect(() => {
-        scene.background = new THREE.Color().setRGB(1, 0.9, 1, THREE.SRGBColorSpace);
-        // TODO scene.background = textureRef.current;
+        scene.environment = cubeTexture;
     }, [scene]);
 
     return (
         <>
-            {/*
-            TODO <GradientTexture
+            {/* <GradientTexture
                 stops={[0, 1]} // As many stops as you want
                 colors={['aquamarine', 'hotpink']} // Colors need to match the number of stops
                 size={1024} // Size is optional, default = 1024
             /> */}
-            {/*
+            {/* 
             TODO <GradientTexture
                 ref={textureRef}
                 stops={[0, 0.5, 1]} // As many stops as you want

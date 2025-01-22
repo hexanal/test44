@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { useCallback, useRef, useState } from 'react';
-import { Html, TransformControls, useHelper } from '@react-three/drei';
+import { useEffect, useRef, useState } from 'react';
+import { TransformControls, useHelper } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 
 // import { useBox } from '@react-three/cannon';
@@ -8,9 +8,12 @@ import { useFrame } from '@react-three/fiber';
 import { useKeyboardControls } from '../../hooks/KeyboardControls';
 import { useEditorStore } from '../../stores/editor';
 
+// export default function Transform(props) {
+//   const { object, children } = props || {};
 export default function Transform(props) {
-  const { id = 'untitled', object, children } = props || {};
+  const { children } = props || {};
   const {
+    DEBUG,
     selected,
     transformMode,
     setTransformMode,
@@ -19,7 +22,7 @@ export default function Transform(props) {
   const ref = useRef(new THREE.Object3D());
 
   useFrame(() => {
-    if (!object) return;
+    // if (!object) return;
 
     if (get().ROTATE_OBJECT) {
       setTransformMode('rotate');
@@ -32,16 +35,24 @@ export default function Transform(props) {
     }
   });
 
+  useEffect(() => {
+    if (ref.current && selected) {
+      ref.current.attach(selected);
+    }
+  }, [selected]);
+
   return (
     <>
-      <TransformControls
-        mode={transformMode}
-        object={selected}
-        // showX={object == selected}
-        // showY={object == selected}
-        // showZ={object == selected}
-      />
-      {children}
+      {selected && (
+        <TransformControls
+          ref={ref}
+          mode={transformMode}
+          object={selected}
+          showX={DEBUG}
+          showY={DEBUG}
+          showZ={DEBUG}
+        />
+      )}
     </>
   );
 }

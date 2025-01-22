@@ -1,11 +1,17 @@
 import { create } from 'zustand';
 
 export const useEditorStore = create((set) => ({
+    DEBUG: false,
+    setDEBUG: (value) => set({ DEBUG: value }),
+
     showReticle: true,
     setShowReticle: (value) => set({ showReticle: value }),
 
     showGrid: false,
     setShowGrid: (value) => set({ showGrid: value }),
+
+    showSky: false,
+    setShowSky: (value) => set({ showSky: value }),
 
     boxSelectActive: false,
     setBoxSelectActive: (target) => set({ boxSelectActive: target }),

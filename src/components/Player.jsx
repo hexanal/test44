@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { useControls, folder } from "leva";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html, PerspectiveCamera, PointerLockControls, useHelper } from "@react-three/drei";
@@ -22,7 +23,70 @@ export default function Player(props) {
         linearDamping,
         angularDamping,
         playerMass,
+        setFpsCameraFOV,
+        setMoveForceMagnitude,
+        setJumpForceMagnitude,
+        setMultiplier,
+        setShiftMultiplier,
+        setLinearDamping,
+        setAngularDamping,
+        setPlayerMass,
     } = useEditorStore();
+
+    useControls({
+        Player: folder({
+            FpsCameraFOV: {
+                value: fpsCameraFOV,
+                min: 10,
+                max: 120,
+                onChange: (value) => setFpsCameraFOV(value),
+            },
+            MoveForceMagnitude: {
+                value: moveForceMagnitude,
+                min: 0,
+                max: 10,
+                step: 0.01,
+                onChange: (value) => setMoveForceMagnitude(value),
+            },
+            JumpForceMagnitude: {
+                value: jumpForceMagnitude,
+                min: 0,
+                max: 10,
+                step: 0.01,
+                onChange: (value) => setJumpForceMagnitude(value),
+            },
+            Multiplier: {
+                value: multiplier,
+                min: 0,
+                max: 10,
+                onChange: (value) => setMultiplier(value),
+            },
+            ShiftMultiplier: {
+                value: shiftMultiplier,
+                min: 0,
+                max: 10,
+                onChange: (value) => setShiftMultiplier(value),
+            },
+            LinearDamping: {
+                value: linearDamping,
+                min: 0,
+                max: 1,
+                onChange: (value) => setLinearDamping(value),
+            },
+            AngularDamping: {
+                value: angularDamping,
+                min: 0,
+                max: 1,
+                onChange: (value) => setAngularDamping(value),
+            },
+            PlayerMass: {
+                value: playerMass,
+                min: 0,
+                max: 100,
+                onChange: (value) => setPlayerMass(value),
+            },
+        }),
+    });
     const [bodyRef, api] = useSphere(() => ({
         type: "Dynamic",
         args: [0.5, 1.5], // Capsule-like radius and height
