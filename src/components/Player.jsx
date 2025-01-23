@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { useControls, folder } from "leva";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Html, PerspectiveCamera, PointerLockControls, useHelper } from "@react-three/drei";
+import { Html, PerspectiveCamera } from "@react-three/drei";
 import { useBox, useSphere } from '@react-three/cannon';
 
 import useGamepads from "../hooks/useGamepads";
@@ -31,6 +31,10 @@ export default function Player(props) {
         setLinearDamping,
         setAngularDamping,
         setPlayerMass,
+        panHorizontalSensitivity,
+        setPanHorizontalSensitivity,
+        panVerticalSensitivity,
+        setPanVerticalSensitivity,
     } = useEditorStore();
 
     useControls({
@@ -85,8 +89,23 @@ export default function Player(props) {
                 max: 100,
                 onChange: (value) => setPlayerMass(value),
             },
+            PanHorizontalSensitivity: {
+                value: panHorizontalSensitivity,
+                min: 0,
+                max: 1,
+                step: 0.01,
+                onChange: (value) => setPanHorizontalSensitivity(value),
+            },
+            PanVerticalSensitivity: {
+                value: panVerticalSensitivity,
+                min: 0,
+                max: 0.1,
+                step: 0.001,
+                onChange: (value) => setPanVerticalSensitivity(value),
+            },
         }),
     });
+
     const [bodyRef, api] = useSphere(() => ({
         type: "Dynamic",
         args: [0.5, 1.5], // Capsule-like radius and height
@@ -98,38 +117,85 @@ export default function Player(props) {
     }));
     const headRef = useRef();
     const cameraRef = useRef();
-    const controlsRef = useRef();
 
     const _lngDir = useRef(new THREE.Vector3());
     const _latDir = useRef(new THREE.Vector3());
 
-    const state = useThree((state) => state);
     const size = useThree(({ size }) => size);
 
     const [locked, setLocked] = useState(false);
 
-    const onLock = useCallback(e => {
-        setLocked(true);
+    const longitudinalForceRef = useRef(0);
+    const lateralForceRef = useRef(0);
+    const jumpForceRef = useRef(0);
+    const verticalTorqueRef = useRef(0);
+    const horizontalTorqueRef = useRef(0);
+
+    const handlePointerLockChange = useCallback(() => {
+        const root = document.getElementById('canvas');
+        if (document.pointerLockElement === root) {
+            setLocked(true);
+        } else {
+            setLocked(false);
+        }
     }, [setLocked]);
 
-    const onUnlock = useCallback(e => {
-        setLocked(false);
-    }, [setLocked]);
+    const handlePointerLockError = useCallback(() => {
+        console.error("Pointer lock failed");
+    }, []);
+
+    const requestPointerLock = useCallback(() => {
+        const root = document.getElementById('canvas');
+        if (root) {
+            root.requestPointerLock();
+        }
+    }, []);
+
+    useEffect(() => {
+        const root = document.getElementById('canvas');
+        if (root) {
+            root.addEventListener('click', requestPointerLock);
+        }
+        document.addEventListener('pointerlockchange', handlePointerLockChange);
+        document.addEventListener('pointerlockerror', handlePointerLockError);
+        return () => {
+            if (root) {
+                root.removeEventListener('click', requestPointerLock);
+            }
+            document.removeEventListener('pointerlockchange', handlePointerLockChange);
+            document.removeEventListener('pointerlockerror', handlePointerLockError);
+        };
+    }, [handlePointerLockChange, handlePointerLockError, requestPointerLock]);
 
     useEffect(() => {
         cameraRef.current.fov = fpsCameraFOV;
     }, [fpsCameraFOV]);
 
-    const onPointerLockControlsChange = useCallback(e => {
-        const { target } = e || {};
-        const { camera } = target || {};
+    const handleMouseMove = useCallback((event) => {
+        if (!locked) return;
 
-        camera.getWorldDirection(_lngDir.current);
+        const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+        const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+
+        const panHorizontal = movementX * 0.075;
+        const panVertical = movementY * 0.025;
+
+        horizontalTorqueRef.current = panHorizontal;
+        verticalTorqueRef.current = panVertical;
+
+        bodyRef.current.getWorldDirection(_lngDir.current);
 
         _latDir.current.copy(_lngDir.current);
         _latDir.current.setY(0);
         _latDir.current.applyAxisAngle(_up, Math.PI / 2);
-    }, []);
+    }, [locked, panHorizontalSensitivity, panVerticalSensitivity]);
+
+    useEffect(() => {
+        document.addEventListener('mousemove', handleMouseMove);
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+        };
+    }, [handleMouseMove]);
 
     useLayoutEffect(() => {
         if (cameraRef.current) {
@@ -146,27 +212,30 @@ export default function Player(props) {
         const [leftX, leftY] = leftStick || [];
         const [rightX, rightY] = rightStick || [];
 
-        cameraRef.current.getWorldDirection(_lngDir.current);
+        bodyRef.current.getWorldDirection(_lngDir.current);
 
         _latDir.current.copy(_lngDir.current);
         _latDir.current.setY(0);
         _latDir.current.applyAxisAngle(_up, Math.PI / 2);
 
-        const currentMultiplier = buttonA ? 0.02 : multiplier;
+        const currentMultiplier = 1;
         const longitudinalSpeed = (Math.abs(leftY) > 0.1 ? leftY : 0) * -currentMultiplier;
         const lateralSpeed = (Math.abs(leftX) > 0.1 ? leftX : 0) * -currentMultiplier;
 
         const panHorizontal = (Math.abs(rightX) > 0.1 ? rightX : 0);
         const panVertical = (Math.abs(rightY) > 0.1 ? rightY : 0);
 
-        const newRotation = cameraRef.current.rotation.clone();
-        newRotation.x = newRotation.x + panVertical * 0.01;
-        newRotation.y = newRotation.y + panHorizontal * 0.01;
+        let jumpSpeed = 0;
+        if (buttonA) {
+            jumpSpeed = 1 * jumpForceMagnitude;
+        }
 
-        cameraRef.current.rotation.copy(newRotation);
-
-        return { longitudinalSpeed, lateralSpeed };
-    }, [multiplier]);
+        longitudinalForceRef.current = longitudinalSpeed;
+        lateralForceRef.current = lateralSpeed;
+        jumpForceRef.current = jumpSpeed;
+        horizontalTorqueRef.current = panHorizontal;
+        verticalTorqueRef.current = panVertical;
+    }, [multiplier, panHorizontalSensitivity, panVerticalSensitivity, jumpForceMagnitude]);
 
     const handleKeyboardInput = useCallback(() => {
         let longitudinalSpeed = 0;
@@ -175,10 +244,10 @@ export default function Player(props) {
         const currentMultiplier = getKeyboardInputs().MODIFIER_SHIFT ? shiftMultiplier : multiplier;
 
         if (getKeyboardInputs().FORWARD) {
-            longitudinalSpeed = 1 * currentMultiplier;
+            longitudinalSpeed = -1 * currentMultiplier;
         }
         if (getKeyboardInputs().BACKWARD) {
-            longitudinalSpeed = -1 * currentMultiplier;
+            longitudinalSpeed = 1 * currentMultiplier;
         }
         if (getKeyboardInputs().LEFTWARD) {
             lateralSpeed = 0.5 * currentMultiplier;
@@ -190,64 +259,49 @@ export default function Player(props) {
             jumpSpeed = 1 * jumpForceMagnitude;
         }
 
-        return { longitudinalSpeed, lateralSpeed, jumpSpeed };
+        longitudinalForceRef.current = longitudinalSpeed;
+        lateralForceRef.current = lateralSpeed;
+        jumpForceRef.current = jumpSpeed;
     }, [getKeyboardInputs, multiplier, shiftMultiplier, jumpForceMagnitude]);
 
     useFrame(() => {
-        let longitudinalForce = 0;
-        let lateralForce = 0;
-        let jumpForce = 0;
-
-        if (cameraRef.current) {
-            cameraRef.current.getWorldDirection(_lngDir.current);
-        }
-
-        _latDir.current.copy(_lngDir.current);
-        _latDir.current.setY(0);
-        _latDir.current.applyAxisAngle(_up, Math.PI / 2);
-
         const player1 = getGamepadInputs(0);
 
         if (player1 && !locked) {
-            const forces = handleGamepadInput(player1);
-            longitudinalForce = forces.longitudinalSpeed;
-            lateralForce = forces.lateralSpeed;
-        } else if (locked) {
-            const forces = handleKeyboardInput();
-            longitudinalForce = forces.longitudinalSpeed;
-            lateralForce = forces.lateralSpeed;
-            jumpForce = forces.jumpSpeed;
+            handleGamepadInput(player1);
+        } else {
+            handleKeyboardInput();
         }
 
-        const longitudinalVector = _lngDir.current.clone().multiplyScalar(longitudinalForce * moveForceMagnitude);
-        const lateralVector = _latDir.current.clone().multiplyScalar(lateralForce * moveForceMagnitude);
-        const jumpVector = new THREE.Vector3(0, jumpForce, 0);
+        if (headRef.current) {
+            const headRot = headRef.current.rotation.clone();
+            headRot.x += verticalTorqueRef.current * -panVerticalSensitivity;
+            headRef.current.rotation.copy(headRot);
+        }
+
+        const longitudinalVector = _lngDir.current.clone().multiplyScalar(longitudinalForceRef.current * moveForceMagnitude);
+        // console.log("longitudinalVector", longitudinalVector);
+        console.log("lngDir", _lngDir.current);
+        const lateralVector = _latDir.current.clone().multiplyScalar(lateralForceRef.current * moveForceMagnitude);
+        const jumpVector = new THREE.Vector3(0, jumpForceRef.current, 0);
         api.applyForce(longitudinalVector.toArray(), [0, 0, 0]);
         api.applyForce(lateralVector.toArray(), [0, 0, 0]);
         api.applyForce(jumpVector.toArray(), [0, 0, 0]);
+        api.applyTorque([0, horizontalTorqueRef.current * -panHorizontalSensitivity, 0]);
     });
 
     return (
-        <object3D ref={bodyRef} >
+        <object3D ref={bodyRef}>
             <mesh position={[0, 10, 0]} visible={activeCamera !== 'firstPerson'}>
                 <boxGeometry args={[1, 1.8, 1]} />
                 <meshBasicMaterial wireframe />
             </mesh>
 
-            <object3D ref={headRef}>
+            <object3D ref={headRef} position={[0, 1.5, 0]}>
                 <PerspectiveCamera makeDefault={activeCamera === "firstPerson"} ref={cameraRef}>
                     <Reticle />
                 </PerspectiveCamera>
             </object3D>
-
-            <PointerLockControls
-                ref={controlsRef}
-                enabled={activeControls === 'pointer'}
-                selector="#canvas"
-                onChange={onPointerLockControlsChange}
-                onLock={onLock}
-                onUnlock={onUnlock}
-            />
         </object3D>
     );
 }

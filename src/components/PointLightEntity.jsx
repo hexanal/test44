@@ -1,17 +1,11 @@
 import * as THREE from 'three';
 import { useCallback, useRef } from 'react';
 import { Html, useHelper } from '@react-three/drei';
-import { useEditorStore } from '../../stores/editor';
-import Transform from '../../components/Transform';
+import { useEditorStore } from '../stores/editor';
+import Transform from './Transform';
 
-const _min = new THREE.Vector3(-1, -1, -1);
-const _max = new THREE.Vector3(1, 1, 1);
-
-export function DirectionalLightEntity() {
+export function PointLightEntity() {
     const ref = useRef();
-    const transformRef = useRef();
-    const box3Ref = useRef(new THREE.Box3(_min, _max));
-    const boundingBoxRef = useRef(new THREE.Box3Helper());
     const pointLightRef = useRef();
     const { selected, setSelected } = useEditorStore();
 
@@ -21,19 +15,16 @@ export function DirectionalLightEntity() {
         setSelected(ref.current);
     }, [setSelected]);
 
-    // box.setFromCenterAndSize( new THREE.Vector3( 1, 1, 1 ), new THREE.Vector3( 2, 1, 3 ) );
-    // const helper = new THREE.Box3Helper( box, 0xffff00 );
-
     return (
         <>
             <Transform
-                object={transformRef.current}
+                object={ref.current}
                 // makeDefault={selected}
                 enabled={selected}
             />
             <group
-                position={[0, 2, 1]}
-                ref={transformRef}
+                ref={ref}
+                position={[-10, 3, 10]}
                 onClick={onClick}
             >
                 <Html
@@ -54,16 +45,16 @@ export function DirectionalLightEntity() {
                 >
                     <pre style={{ fontSize: "3rem", userSelect: "none" }}>💡</pre>
                 </Html>
-                <directionalLight
-                    ref={ref}
-                    intensity={0.5}
-                    shadow-mapSize-height={512}
-                    shadow-mapSize-width={512}
+                <pointLight
+                    ref={pointLightRef}
+                    decay={0.1}
+                    intensity={Math.PI / 2}
+                    shadow-mapSize-height={1024}
+                    shadow-mapSize-width={1024}
+                    shadow-radius={10}
+                    shadow-bias={-0.0001}
                     castShadow
                 />
-                <box3 ref={box3Ref} args={[_min, _max]}>
-                    <box3Helper args={[boundingBoxRef.current, 0xffff00]} />
-                </box3>
             </group>
         </>
     );

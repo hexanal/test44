@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Html, GradientTexture, useCubeTexture } from '@react-three/drei';
-import { useEditorStore } from '../../stores/editor';
+import { useEditorStore } from '../stores/editor';
 
 export function Background() {
     const { scene } = useThree();

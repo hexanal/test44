@@ -1,7 +1,7 @@
 import { PerspectiveCamera, OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useRef, useLayoutEffect } from "react";
-import { useEditorStore } from "../../stores/editor";
+import { useEditorStore } from "../stores/editor";
 
 
 export function OrbiterControls(props) {

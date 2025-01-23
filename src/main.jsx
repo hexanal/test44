@@ -7,11 +7,16 @@ import {
 } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
+import SandboxOne from "./pages/SandboxOne";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <HomePage />
+  },
+  {
+    path: "/sandbox1",
+    element: <SandboxOne />
   },
 ]);
 

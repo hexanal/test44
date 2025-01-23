@@ -6,7 +6,7 @@ import { GridHelper } from './GridHelper';
 
 import { PointLightEntity } from './PointLightEntity';
 import { DirectionalLightEntity } from './DirectionalLightEntity';
-import { useEditorStore } from '../../stores/editor';
+import { useEditorStore } from '../stores/editor';
 
 export function Environment() {
     const { DEBUG, showGrid, setShowGrid } = useEditorStore();

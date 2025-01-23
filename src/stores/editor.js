@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 export const useEditorStore = create((set) => ({
+    keyboardEnabled: true,
+    setKeyboardEnabled: () => set((value) => ({ keyboardEnabled: value })),
 
     DEBUG: false,
     setDEBUG: (value) => set({ DEBUG: value }),
@@ -75,4 +77,10 @@ export const useEditorStore = create((set) => ({
 
     playerMass: 1,
     setPlayerMass: (value) => set({ playerMass: value }),
+
+    panHorizontalSensitivity: 0.5,
+    setPanHorizontalSensitivity: (value) => set({ panHorizontalSensitivity: value }),
+
+    panVerticalSensitivity: 0.015,
+    setPanVerticalSensitivity: (value) => set({ panVerticalSensitivity: value }),
 }));

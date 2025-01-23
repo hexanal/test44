@@ -6,22 +6,22 @@ import { Html, Sky } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Physics, useBox } from '@react-three/cannon';
 
-import KeyboardControlsProvider from "../../components/KeyboardControlsProvider";
-import Player from "../../components/Player";
-import Transform from "../../components/Transform";
-import { Selectable } from '../../components/Selectable';
-import { Thing } from '../../components/Thing';
+import KeyboardControlsProvider from "../components/KeyboardControlsProvider";
+import Player from "../components/Player";
+import Transform from "../components/Transform";
+import { Selectable } from '../components/Selectable';
+import { Thing } from '../components/Thing';
 
-import { Background } from './Background';
-import { Environment } from './Environment';
-import { Plane } from './Plane';
-import { OrbiterControls } from './OrbiterControls';
+import { Background } from '../components/Background';
+import { Environment } from '../components/Environment';
+import { Plane } from '../components/Plane';
+import { OrbiterControls } from '../components/OrbiterControls';
 
 // import { FloatingBox } from './FloatingBox';
 // import { AnimatedObject } from './AnimatedObject';
 // import { AnimatedBox } from './AnimatedBox';
 
-import { useEditorStore } from '../../stores/editor';
+import { useEditorStore } from '../stores/editor';
 
 function getRandomValue(min, max) {
     return Math.random() * (max - min) + min;
