@@ -16,6 +16,7 @@
     "@react-three/drei": "^9.120.5",
     "@react-three/fiber": "^8.17.10",
     "@types/three": "^0.171.0",
+    "bitecs": "^0.3.40",
     "classnames": "^2.5.1",
     "leva": "^0.9.35",
     "react": "^18.3.1",

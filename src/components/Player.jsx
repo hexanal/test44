@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useControls, folder } from "leva";
+import { usePlayerLevaSettings } from "./usePlayerLevaSettings";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html, PerspectiveCamera } from "@react-three/drei";
@@ -15,6 +15,7 @@ export default function Player(props) {
     const {
         activeControls,
         activeCamera,
+        keyboardEnabled,
         fpsCameraFOV,
         moveForceMagnitude,
         jumpForceMagnitude,
@@ -23,93 +24,17 @@ export default function Player(props) {
         linearDamping,
         angularDamping,
         playerMass,
-        setFpsCameraFOV,
-        setMoveForceMagnitude,
-        setJumpForceMagnitude,
-        setMultiplier,
-        setShiftMultiplier,
-        setLinearDamping,
-        setAngularDamping,
-        setPlayerMass,
         panHorizontalSensitivity,
-        setPanHorizontalSensitivity,
         panVerticalSensitivity,
-        setPanVerticalSensitivity,
     } = useEditorStore();
 
-    useControls({
-        Player: folder({
-            FpsCameraFOV: {
-                value: fpsCameraFOV,
-                min: 10,
-                max: 120,
-                onChange: (value) => setFpsCameraFOV(value),
-            },
-            MoveForceMagnitude: {
-                value: moveForceMagnitude,
-                min: 0,
-                max: 10,
-                step: 0.01,
-                onChange: (value) => setMoveForceMagnitude(value),
-            },
-            JumpForceMagnitude: {
-                value: jumpForceMagnitude,
-                min: 0,
-                max: 10,
-                step: 0.01,
-                onChange: (value) => setJumpForceMagnitude(value),
-            },
-            Multiplier: {
-                value: multiplier,
-                min: 0,
-                max: 10,
-                onChange: (value) => setMultiplier(value),
-            },
-            ShiftMultiplier: {
-                value: shiftMultiplier,
-                min: 0,
-                max: 10,
-                onChange: (value) => setShiftMultiplier(value),
-            },
-            LinearDamping: {
-                value: linearDamping,
-                min: 0,
-                max: 1,
-                onChange: (value) => setLinearDamping(value),
-            },
-            AngularDamping: {
-                value: angularDamping,
-                min: 0,
-                max: 1,
-                onChange: (value) => setAngularDamping(value),
-            },
-            PlayerMass: {
-                value: playerMass,
-                min: 0,
-                max: 100,
-                onChange: (value) => setPlayerMass(value),
-            },
-            PanHorizontalSensitivity: {
-                value: panHorizontalSensitivity,
-                min: 0,
-                max: 1,
-                step: 0.01,
-                onChange: (value) => setPanHorizontalSensitivity(value),
-            },
-            PanVerticalSensitivity: {
-                value: panVerticalSensitivity,
-                min: 0,
-                max: 0.1,
-                step: 0.001,
-                onChange: (value) => setPanVerticalSensitivity(value),
-            },
-        }),
-    });
+    usePlayerLevaSettings();
 
     const [bodyRef, api] = useSphere(() => ({
         type: "Dynamic",
         args: [0.5, 1.5], // Capsule-like radius and height
         position: [0, 1, 0],
+        friction: 0.01, 
         angularFactor: [0, 1, 0], // Prevent tipping
         mass: playerMass,
         linearDamping,
@@ -132,24 +57,28 @@ export default function Player(props) {
     const horizontalTorqueRef = useRef(0);
 
     const handlePointerLockChange = useCallback(() => {
+        if (activeControls !== 'pointer') return;
+
         const root = document.getElementById('canvas');
         if (document.pointerLockElement === root) {
             setLocked(true);
         } else {
             setLocked(false);
         }
-    }, [setLocked]);
+    }, [setLocked, activeControls]);
 
     const handlePointerLockError = useCallback(() => {
         console.error("Pointer lock failed");
     }, []);
 
     const requestPointerLock = useCallback(() => {
+        if (activeControls !== 'pointer') return;
+
         const root = document.getElementById('canvas');
         if (root) {
             root.requestPointerLock();
         }
-    }, []);
+    }, [activeControls]);
 
     useEffect(() => {
         const root = document.getElementById('canvas');
@@ -219,8 +148,8 @@ export default function Player(props) {
         _latDir.current.applyAxisAngle(_up, Math.PI / 2);
 
         const currentMultiplier = 1;
-        const longitudinalSpeed = (Math.abs(leftY) > 0.1 ? leftY : 0) * -currentMultiplier;
-        const lateralSpeed = (Math.abs(leftX) > 0.1 ? leftX : 0) * -currentMultiplier;
+        const longitudinalSpeed = (Math.abs(leftY) > 0.1 ? leftY : 0) * currentMultiplier;
+        const lateralSpeed = (Math.abs(leftX) > 0.1 ? leftX : 0) * currentMultiplier;
 
         const panHorizontal = (Math.abs(rightX) > 0.1 ? rightX : 0);
         const panVertical = (Math.abs(rightY) > 0.1 ? rightY : 0);
@@ -265,11 +194,13 @@ export default function Player(props) {
     }, [getKeyboardInputs, multiplier, shiftMultiplier, jumpForceMagnitude]);
 
     useFrame(() => {
+        if (activeControls !== 'pointer') return;
+
         const player1 = getGamepadInputs(0);
 
         if (player1 && !locked) {
             handleGamepadInput(player1);
-        } else {
+        } else if (keyboardEnabled) {
             handleKeyboardInput();
         }
 
@@ -280,8 +211,6 @@ export default function Player(props) {
         }
 
         const longitudinalVector = _lngDir.current.clone().multiplyScalar(longitudinalForceRef.current * moveForceMagnitude);
-        // console.log("longitudinalVector", longitudinalVector);
-        console.log("lngDir", _lngDir.current);
         const lateralVector = _latDir.current.clone().multiplyScalar(lateralForceRef.current * moveForceMagnitude);
         const jumpVector = new THREE.Vector3(0, jumpForceRef.current, 0);
         api.applyForce(longitudinalVector.toArray(), [0, 0, 0]);
@@ -292,12 +221,19 @@ export default function Player(props) {
 
     return (
         <object3D ref={bodyRef}>
-            <mesh position={[0, 10, 0]} visible={activeCamera !== 'firstPerson'}>
+            <axesHelper args={[0.25]} />
+
+            <mesh position={[0, 0, 0]} visible={activeCamera !== 'firstPerson'}>
                 <boxGeometry args={[1, 1.8, 1]} />
-                <meshBasicMaterial wireframe />
+                <meshBasicMaterial color={0xff00ff} wireframe />
             </mesh>
 
             <object3D ref={headRef} position={[0, 1.5, 0]}>
+                <axesHelper args={[0.25]} />
+                <mesh position={[0, 0, 0]} visible={activeCamera !== 'firstPerson'}>
+                    <boxGeometry args={[1, 1.8, 1]} />
+                    <meshBasicMaterial color={0xff00ff} wireframe />
+                </mesh>
                 <PerspectiveCamera makeDefault={activeCamera === "firstPerson"} ref={cameraRef}>
                     <Reticle />
                 </PerspectiveCamera>

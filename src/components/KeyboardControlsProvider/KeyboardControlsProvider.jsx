@@ -1,20 +1,10 @@
-import { useControls } from 'leva';
 import { useCallback, useMemo } from 'react';
 import { KeyboardControls } from '../../hooks/KeyboardControls';
-import { useEditorStore } from '../../stores/editor';
 
 export default function KeyboardControlsProvider(props) {
   const {
     children,
   } = props || {};
-  const { setKeyboardEnabled } = useEditorStore();
-  const { keyboardEnabled } = useControls({
-    keyboardEnabled: {
-      value: true,
-      label: 'Enable Keyboard Controls',
-      onChange: (value) => setKeyboardEnabled(value),
-    },
-  });
 
   const controlsMapping = useMemo(() => [
     { name: "FORWARD", keys: ['ArrowUp', 'KeyW'] },
@@ -34,7 +24,7 @@ export default function KeyboardControlsProvider(props) {
   ], [])
 
   const onKeyboardControlsChange = useCallback((name, pressed, state) => {
-    console.log('KeyboardControlsProvider - onKeyboardControlsChange', { name, pressed, state });
+    // console.log('KeyboardControlsProvider - onKeyboardControlsChange', { name, pressed, state });
   }, []);
 
   return (

@@ -8,6 +8,8 @@ import {
 
 import HomePage from "./pages/HomePage";
 import SandboxOne from "./pages/SandboxOne";
+import SandboxTwo from "./pages/SandboxTwo";
+import ControllersDebug from "./pages/ControllersDebug";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +19,14 @@ const router = createBrowserRouter([
   {
     path: "/sandbox1",
     element: <SandboxOne />
+  },
+  {
+    path: "/sandbox2",
+    element: <SandboxTwo />
+  },
+  {
+    path: "/debug/controllers",
+    element: <ControllersDebug />
   },
 ]);
 

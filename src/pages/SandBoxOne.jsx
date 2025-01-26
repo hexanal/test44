@@ -1,4 +1,4 @@
-// import * as THREE from 'three';
+import * as THREE from 'three';
 import { useControls } from 'leva';
 import { Fragment, forwardRef, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // import { Select, useSelect, TransformControls, Html } from '@react-three/drei';
@@ -18,7 +18,7 @@ import { Plane } from '../components/Plane';
 import { OrbiterControls } from '../components/OrbiterControls';
 
 // import { FloatingBox } from './FloatingBox';
-// import { AnimatedObject } from './AnimatedObject';
+import { AnimatedObject } from '../components/AnimatedObject';
 // import { AnimatedBox } from './AnimatedBox';
 
 import { useEditorStore } from '../stores/editor';
@@ -68,7 +68,7 @@ const THINGS = Array.from({ length: 10 }, (_, index) => createRandomThing(`rando
  * - Implement additional features and controls as needed.
  * - Optimize performance for larger scenes.
  */
-export default function HomePage(props) {
+export default function SandboxOne(props) {
     const { DEBUG,
 
         // add leva controls for the following two lines' values, under folder Physics
@@ -135,46 +135,59 @@ export default function HomePage(props) {
                             iterations={iterations}
                             tolerance={tolerance}
                             allowSleep={allowSleep}
-                            // floorContactEquationStiffness={1e8}
+                        // floorContactEquationStiffness={1e8}
                         >
-                            {/*
-                        <Html
+                            <Html
                                 center
                                 transform
                                 sprite
                             >
-                                <Knob
-                                    label={"FOV"}
-                                    value={fpsCameraFOV}
-                                    onChange={setFpsCameraFOV}
-                                    min={10}
-                                    max={120}
-                                    minAngle={-100}
-                                    maxAngle={100}
-                                    withCurrentValueIndicator
-                                />
-                        </Html>
-                        */}
+                                <div style={{
+                                    position: "absolute",
+                                    zIndex: 1,
+                                    top: "50%",
+                                    left: "50%",
+                                    width: "20px",
+                                    height: "20px",
+                                    backgroundColor: "rgb(255 0 255 / 1)",
+                                    transform: "translate(-50%, -50%)",
+                                    borderRadius: "50%",
+                                }}
+                                >
+                                    <div style={{
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: "50%",
+                                        width: "8px",
+                                        height: "8px",
+                                        backgroundColor: "rgb(255 255 0 / 1)",
+                                        transform: "translate(-50%, -50%)",
+                                        borderRadius: "50%",
+                                    }}
+                                    >
+                                    </div>
+                                </div>
+                            </Html>
 
                             <Player />
                             {THINGS.map((thing) => (
                                 <Thing key={thing.id} {...thing} />
                             ))}
 
-                            {/* <AnimatedObject
+                            <AnimatedObject
                                 startPosition={[2.5, 0, 2.5]}
                                 endPosition={[2.5, 3, 2.5]}
                                 startScale={[1, 1, 1]}
-                                endScale={[endScale, endScale, endScale]}
+                                endScale={[10, 10, 10]}
                                 duration={5}
                                 delay={0}
                                 loop={THREE.LoopPingPong}
                             >
-                            <mesh>
-                                <boxGeometry />
-                                <meshBasicMaterial color="royalblue" />
-                            </mesh>
-                        </AnimatedObject> */}
+                                <mesh>
+                                    <boxGeometry />
+                                    <meshBasicMaterial color="royalblue" />
+                                </mesh>
+                            </AnimatedObject>
 
                             <Plane />
                         </Physics>
