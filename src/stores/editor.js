@@ -49,9 +49,11 @@ export const useEditorStore = create((set) => ({
     setSelected: (object) => set({ selected: object }),
 
     showBoundingBox: true,
+    setBoundingBox: (value) => set({ showBoundingBox: value }),
     toggleShowBoundingBox: () => set((state) => ({ showBoundingBox: !state.showBoundingBox })),
 
     showAxesHelper: true,
+    setShowAxesHelper: (value) => set({ showAxesHelper: value }),
     toggleShowAxesHelper: () => set((state) => ({ showAxesHelper: !state.showAxesHelper })),
 
     linearDamping: 0.1,
@@ -83,4 +85,7 @@ export const useEditorStore = create((set) => ({
 
     panVerticalSensitivity: 0.015,
     setPanVerticalSensitivity: (value) => set({ panVerticalSensitivity: value }),
+
+    ambientLightIntensity: 0.5,
+    setAmbientLightIntensity: (value) => set({ ambientLightIntensity: value }),
 }));

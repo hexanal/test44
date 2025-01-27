@@ -9,24 +9,28 @@ import { DirectionalLightEntity } from './DirectionalLightEntity';
 import { useEditorStore } from '../stores/editor';
 
 export function Environment() {
-    const { DEBUG, showGrid, setShowGrid } = useEditorStore();
+    const { DEBUG, showGrid, setShowGrid,
+        showAxesHelper, setShowAxesHelper,
+        ambientLightIntensity, setAmbientLightIntensity } = useEditorStore();
 
-    const { showAxes, ambientLightIntensity } = useControls({
+    useControls({
         Environment: folder({
             ShowGrid: {
                 value: showGrid,
                 onChange: (value) => setShowGrid(value),
             },
             ShowAxes: {
-                value: true,
                 label: 'Show Axes Helper',
+                value: showAxesHelper,
+                onChange: (value) => setShowAxesHelper(value),
             },
             AmbientLightIntensity: {
-                value: Math.PI / 10,
                 min: 0,
-                max: 1,
+                max: 2,
                 step: 0.01,
                 label: 'Ambient Light Intensity',
+                value: ambientLightIntensity,
+                onChange: (value) => setAmbientLightIntensity(value),
             },
         }),
     });
@@ -34,7 +38,7 @@ export function Environment() {
     return (
         <>
             {showGrid && <GridHelper />}
-            {showAxes && <axesHelper args={[2]} />}
+            {showAxesHelper && <axesHelper args={[2]} />}
             <ambientLight intensity={ambientLightIntensity} />
             <PointLightEntity />
             <DirectionalLightEntity />

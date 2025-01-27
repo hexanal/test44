@@ -5,7 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Html, PerspectiveCamera } from "@react-three/drei";
 import { useBox, useSphere } from '@react-three/cannon';
 
-import useGamepads from "../hooks/useGamepads";
+import { useGamepads } from "../hooks/useGamepads";
 import { useKeyboardControls } from "../hooks/KeyboardControls";
 import { useEditorStore } from "../stores/editor";
 

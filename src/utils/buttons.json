@@ -1,0 +1,28 @@
+{
+    "buttons": [
+        {
+            "id": 1,
+            "color": "#ff0000",
+            "label": "Button 1",
+            "position": [0, 0, 0]
+        },
+        {
+            "id": 2,
+            "color": "#00ff00",
+            "label": "Button 2",
+            "position": [1, 0, 0]
+        },
+        {
+            "id": 3,
+            "color": "#0000ff",
+            "label": "Button 3",
+            "position": [2, 0, 0]
+        },
+        {
+            "id": 4,
+            "color": "#ffff00",
+            "label": "Button 4",
+            "position": [3, 0, 0]
+        }
+    ]
+}

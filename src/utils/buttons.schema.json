@@ -1,0 +1,39 @@
+{
+    "type": "object",
+    "properties": {
+        "buttons": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "color": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                    }
+                },
+                "required": [
+                    "id",
+                    "color",
+                    "label",
+                    "position"
+                ]
+            }
+        }
+    },
+    "required": [
+        "buttons"
+    ]
+}

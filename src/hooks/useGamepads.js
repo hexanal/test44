@@ -23,7 +23,7 @@ import { useState, useCallback, useEffect } from 'react';
 //   L2 : 0->1
 //   R1
 //   L1
-export default function useGamepads(config = {}) {
+export function useGamepads(config = {}) {
   const [gamepads, setGamepads] = useState(null);
 
   const get = useCallback((gamepadIndex = 0) => {
