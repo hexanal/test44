@@ -31,13 +31,27 @@ export const useEditorStore = create((set) => ({
     boxSelectActive: false,
     setBoxSelectActive: (target) => set({ boxSelectActive: target }),
 
+    player1Controls: 'keyboard',
+    setPlayer1Controls: (value) => set({ player1Controls: value }),
+
     activeControls: 'pointer',
     setActiveControls: (control) => set({ activeControls: control }),
 
     activeCamera: "firstPerson",
     setActiveCamera: (name) => set({ activeCamera: name }),
-    switchToFirstPersonCamera: () => set({ activeCamera: "firstPerson" }),
+    switchToFirstPersonCamera: () => set({
+        activeCamera: "firstPerson"
+    }),
     switchToOrbitCamera: () => set({ activeCamera: "orbit" }),
+
+    activateFirstPersonControls: () => set({
+        activeCamera: "firstPerson",
+        activeControls: "pointer"
+    }),
+    activateOrbitControls: () => set({
+        activeCamera: "orbit",
+        activeControls: "orbit"
+    }),
 
     transformMode: "translate",
     setTransformMode: (mode) => set({ transformMode: mode }),

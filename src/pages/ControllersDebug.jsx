@@ -13,6 +13,7 @@ import { Background } from '../components/Background';
 import { Environment } from '../components/Environment';
 
 import { useGamepads } from '../hooks/useGamepads';
+import { useKeyboardControls } from '../hooks/KeyboardControls';
 import { useEditorStore } from '../stores/editor';
 import { loadDocument } from '../utils/loadDocument';
 
@@ -20,13 +21,24 @@ import { loadDocument } from '../utils/loadDocument';
 import { useAnimate, spring } from '@animini/react-three';
 import { spring as levaSpring } from '@leva-ui/plugin-spring'
 
-export const RoundButton = ({ button = false, color, label, position }) => {
+export const RoundButton = ({ button = false, color, label, position, springConfig = { damping: 15, stiffness: 200 } }) => {
+    const { player1Controls, activateOrbitControls, activateFirstPersonControls } = useEditorStore();
     const [mesh, setMesh] = useAnimate();
-    const { springConfig } = useControls(`spring ${label}`, { springConfig: levaSpring() })
-    // TODO maybe pressed logic should live in this component
+    const pressure = useRef(0);
+
+    useEffect(() => {
+        activateOrbitControls();
+    }, []);
+
+    useEffect(() => {
+        console.log(springConfig);
+    }, [springConfig]);
+
     const [_gamepads, getGamepadInputs] = useGamepads();
-    const [pressed, setPressed] = useState(0);
-    const handleGamepadInput = useCallback((player1) => {
+    const handleGamepadInput = useCallback(() => {
+        if (player1Controls !== 'gamepad') return;
+
+        const player1 = getGamepadInputs(0);
         const { leftStick, rightStick, buttonA,
             buttonX, buttonY, buttonB
         } = player1 || {};
@@ -47,25 +59,41 @@ export const RoundButton = ({ button = false, color, label, position }) => {
             p = buttonB ? 1 : 0;
         }
 
-        const config = { easing: spring(springConfig) }
-        // console.log('——————————————');
-        // console.log('p:', p);
-        // console.log('position:', position);
-        // console.log('——————————————');
-        setMesh.start({ position: { x: position[0], y: (p * -2) + position[1], z: position[2] } }, config);
+        if (p !== pressure.current) {
+            pressure.current = p;
 
-        // setPressed(p);
-    }, [setPressed, setMesh, position, springConfig]);
+            const config = { easing: spring(springConfig) }
+            setMesh.start({ position: { x: 0, y: (pressure.current * -0.09), z: 0 } }, config);
+        }
+    }, [getGamepadInputs, setMesh, position, springConfig, label, player1Controls]);
 
-    useLayoutEffect(() => {
-        const config = { easing: spring(springConfig) }
-        setMesh.start({ position }, config);
-    }, [position, setMesh, springConfig]);
+    const [_keys, getKeyboardInputs] = useKeyboardControls();
+    const handleKeyboardInput = useCallback(() => {
+        if (player1Controls !== 'keyboard') return;
+
+        let p = 0;
+        if (getKeyboardInputs().JUMP && label === 'A') {
+            p = 1;
+        }
+        if (getKeyboardInputs().INTERACT && label === 'X') {
+            p = 1;
+        }
+        if (getKeyboardInputs().RELOAD && label === 'Y') {
+            p = 0.5;
+        }
+
+        // const config = { easing: spring(springConfig) }
+
+        if (p !== pressure.current) {
+            pressure.current = p;
+
+            setMesh.start({ position: { x: 0, y: (pressure.current * -0.09), z: 0 } }, springConfig);
+        }
+    }, [getKeyboardInputs, setMesh, position, springConfig, label, player1Controls]);
 
     useFrame(() => {
-        const player1 = getGamepadInputs(0);
-        console.log('position:', position);
-        handleGamepadInput(player1);
+        handleGamepadInput();
+        handleKeyboardInput();
     });
 
     return (
@@ -73,34 +101,36 @@ export const RoundButton = ({ button = false, color, label, position }) => {
             position={position}
             scale={[0.5, 0.5, 0.5]}
         >
-            <mesh position={[0, 0.1, 0]}>
-                <cylinderGeometry args={[1, 1, 0.2, 32]} />
-                <meshStandardMaterial color={color} />
-            </mesh>
-            <mesh ref={mesh} position={[0, -0.1, 0]}>
+            <object3D ref={mesh}>
+                <Html
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    scale={3}
+                    center
+                    transform
+                >
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        fontFamily: 'monospace',
+                        color: 'white',
+                        fontSize: '16px',
+                        textShadow: '0.05em 0.05em 0 rgb(0 0 0 / 100%)',
+                        userSelect: 'none',
+                    }}>
+                        {label}
+                    </div>
+                </Html>
+                <mesh>
+                    <cylinderGeometry args={[1, 1, 0.1, 32]} />
+                    <meshStandardMaterial color={color} />
+                </mesh>
+            </object3D>
+            <mesh position={[0, -0.1, 0]}>
                 <cylinderGeometry args={[1.1, 1.1, 0.1, 32]} />
                 <meshStandardMaterial color="black" />
             </mesh>
-            <Html
-                position={[0, 0.2, 0]}
-                rotation={[-Math.PI / 2, 0, 0]}
-                scale={3}
-                center
-                transform
-            >
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    fontFamily: 'monospace',
-                    color: 'white',
-                    fontSize: '16px',
-                    textShadow: '0.05em 0.05em 0 rgb(0 0 0 / 100%)',
-                    userSelect: 'none',
-                }}>
-                    {label}
-                </div>
-            </Html>
+
         </object3D>
     );
 };
@@ -108,17 +138,11 @@ export const RoundButton = ({ button = false, color, label, position }) => {
 export default function ControllersDebug(props) {
     const {
         DEBUG,
-        setActiveControls,
-        setActiveCamera,
+        setPlayer1Controls,
     } = useEditorStore();
 
-
-    useEffect(() => {
-        setActiveControls('orbit');
-        setActiveCamera('orbit');
-    }, [setActiveControls, setActiveCamera]);
-
-    const [buttons, setButtons] = useState([]); /* [
+    const [buttons, setButtons] = useState([]);
+    /* [
         { id: 1, color: 'red', label: 'A', position: [0, 0, 0] },
         { id: 2, color: 'blue', label: 'B', position: [1.1, 0, -1] },
         { id: 3, color: 'green', label: 'X', position: [-1.1, 0, -1] },
@@ -129,7 +153,7 @@ export default function ControllersDebug(props) {
         const fetchConfig = async () => {
             try {
                 const config = await loadDocument('/documents/round-buttons.json');
-                console.log('config:', config);
+                // console.log('config:', config);
                 setButtons(config.buttons);
             } catch (error) {
                 console.error('Failed to load configuration for round-buttons:', error);
@@ -139,6 +163,17 @@ export default function ControllersDebug(props) {
         fetchConfig();
     }, []);
 
+    useControls('Player 1 controls', {
+        useGamepad: button(() => {
+            setPlayer1Controls('gamepad');
+        }),
+        useKeyboard: button(() => {
+            setPlayer1Controls('keyboard');
+        }),
+    });
+    const { springConfig } = useControls("Spring", {
+        springConfig: levaSpring(),
+    });
     useControls('Buttons', {
         addButton: button(() => {
             const newId = buttons.length ? buttons[buttons.length - 1].id + 1 : 1;
@@ -173,7 +208,7 @@ export default function ControllersDebug(props) {
             });
             return acc;
         }, {}),
-    });
+    }, [buttons, setButtons]);
 
     return (
         <KeyboardControlsProvider>
@@ -192,6 +227,7 @@ export default function ControllersDebug(props) {
                                     color={button.color}
                                     label={button.label}
                                     position={button.position}
+                                    springConfig={springConfig}
                                 />
                             ))}
                             {/* <object3D

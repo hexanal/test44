@@ -27,7 +27,11 @@ export function useGamepads(config = {}) {
   const [gamepads, setGamepads] = useState(null);
 
   const get = useCallback((gamepadIndex = 0) => {
-    if (gamepads === null) return;
+    if (gamepads === null) {
+      setGamepads(navigator.getGamepads());  
+
+      return;
+    };
     if (!gamepads[gamepadIndex]) return;
 
     const pads = navigator.getGamepads();
@@ -78,6 +82,7 @@ export function useGamepads(config = {}) {
 
   const onGamepadConnected = useCallback(() => {
     setGamepads(navigator.getGamepads());
+    console.log('useGamepads - gamepadconnected');
   }, [setGamepads]);
 
   useEffect(() => {
@@ -85,7 +90,6 @@ export function useGamepads(config = {}) {
 
     return () => {
       window.removeEventListener('gamepadconnected', onGamepadConnected);
-
     };
   }, [onGamepadConnected]);
 
