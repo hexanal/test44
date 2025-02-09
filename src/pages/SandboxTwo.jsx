@@ -1,50 +1,38 @@
 import React from 'react';
 import { Canvas } from '@react-three/fiber';
-import { useGameStore } from '../stores/game';
-import { Position, Rotation, Scale } from './components';
+import { Sky } from '@react-three/drei';
+import { Physics } from '@react-three/cannon';
 
-function Box({ entity }) {
-  const { world } = useGameStore();
+import KeyboardControlsProvider from "../components/KeyboardControlsProvider";
+import Transform from "../components/Transform";
+import { Background } from '../components/Background';
+import { Environment } from '../components/Environment';
+import { OrbiterControls } from "../components/OrbiterControls";
+import { Thing } from "../components/Thing";
+import { Plane } from "../components/Plane";
+
+function SandboxTwo() {
   return (
-    <mesh
-      position={[Position.x[entity], Position.y[entity], Position.z[entity]]}
-      rotation={[Rotation.x[entity], Rotation.y[entity], Rotation.z[entity]]}
-      scale={[Scale.x[entity], Scale.y[entity], Scale.z[entity]]}
-    >
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="orange" />
-    </mesh>
+    <KeyboardControlsProvider>
+      <div id="canvas" style={{ position: "fixed", zIndex: 1, width: "100vw", height: "100vh", top: 0, left: 0, }}>
+        <Canvas shadows>
+          <scene>
+            <Transform />
+            <Background />
+            <Sky />
+            <Environment />
+
+            <Physics>
+              <Thing position={[0, 2, 0]} color={0xff4242} />
+              <Plane position={[0, -1, 0]} />
+            </Physics>
+
+            <OrbiterControls makeDefault />
+          </scene>
+        </Canvas>
+      </div>
+    </KeyboardControlsProvider>
   );
 }
 
-function Game() {
-  const { entities, snapshot, restore } = useGameStore();
-
-  const handleSnapshot = () => {
-    const snap = snapshot();
-    localStorage.setItem('gameSnapshot', snap);
-  };
-
-  const handleRestore = () => {
-    const savedSnapshot = localStorage.getItem('gameSnapshot');
-    if (savedSnapshot) {
-      restore(savedSnapshot);
-    }
-  };
-
-  return (
-    <div>
-      <button onClick={handleSnapshot}>Snapshot</button>
-      <button onClick={handleRestore}>Restore</button>
-      <Canvas>
-        <ambientLight />
-        <pointLight position={[10, 10, 10]} />
-        {Object.values(entities).map((entity, index) => (
-          <Box key={index} entity={entity} />
-        ))}
-      </Canvas>
-    </div>
-  );
-}
-
-export default Game;
+export default SandboxTwo;

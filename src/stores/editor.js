@@ -22,7 +22,7 @@ export const useEditorStore = create((set) => ({
     showReticle: true,
     setShowReticle: (value) => set({ showReticle: value }),
 
-    showGrid: false,
+    showGrid: true,
     setShowGrid: (value) => set({ showGrid: value }),
 
     showSky: false,

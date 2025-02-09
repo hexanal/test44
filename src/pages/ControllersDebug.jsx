@@ -30,9 +30,9 @@ export const RoundButton = ({ button = false, color, label, position, springConf
         activateOrbitControls();
     }, []);
 
-    useEffect(() => {
-        console.log(springConfig);
-    }, [springConfig]);
+    // useEffect(() => {
+    //     console.log(springConfig);
+    // }, [springConfig]);
 
     const [_gamepads, getGamepadInputs] = useGamepads();
     const handleGamepadInput = useCallback(() => {
@@ -82,12 +82,12 @@ export const RoundButton = ({ button = false, color, label, position, springConf
             p = 0.5;
         }
 
-        // const config = { easing: spring(springConfig) }
+        const config = { easing: spring(springConfig) }
 
         if (p !== pressure.current) {
             pressure.current = p;
 
-            setMesh.start({ position: { x: 0, y: (pressure.current * -0.09), z: 0 } }, springConfig);
+            setMesh.start({ position: { x: 0, y: (pressure.current * -0.09), z: 0 } }, config);
         }
     }, [getKeyboardInputs, setMesh, position, springConfig, label, player1Controls]);
 
@@ -142,12 +142,6 @@ export default function ControllersDebug(props) {
     } = useEditorStore();
 
     const [buttons, setButtons] = useState([]);
-    /* [
-        { id: 1, color: 'red', label: 'A', position: [0, 0, 0] },
-        { id: 2, color: 'blue', label: 'B', position: [1.1, 0, -1] },
-        { id: 3, color: 'green', label: 'X', position: [-1.1, 0, -1] },
-        { id: 4, color: 'yellow', label: 'Y', position: [0, 0, -2] },
-    ]); */
 
     useEffect(() => {
         const fetchConfig = async () => {
@@ -253,9 +247,8 @@ export default function ControllersDebug(props) {
                             >
                                 <RoundButton color="blue" label="B" />
                             </object3D> */}
+                            <OrbiterControls />
                         </Suspense>
-
-                        <OrbiterControls />
                     </scene>
                 </Canvas>
             </div>

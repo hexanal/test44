@@ -7,7 +7,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 
 import KeyboardControlsProvider from "../components/KeyboardControlsProvider";
 import Transform from "../components/Transform";
-import { Position, Rotation, Scale } from "./components";
+import { Position, Rotation, Scale } from "../pages/components";
 import { OrbiterControls } from "../components/OrbiterControls";
 
 import { Background } from '../components/Background';
