@@ -9,7 +9,12 @@ import {
 import HomePage from "./pages/HomePage";
 import SandboxOne from "./pages/SandboxOne";
 import SandboxTwo from "./pages/SandboxTwo";
+import Viewports from "./pages/Viewports";
+import VectorOperations from "./pages/VectorOperations";
 import ControllersDebug from "./pages/ControllersDebug";
+
+import { Sandbox3 } from "./pages/Sandbox3";
+import { Sandbox4 } from "./pages/Sandbox4";
 
 const router = createBrowserRouter([
   {
@@ -17,12 +22,28 @@ const router = createBrowserRouter([
     element: <HomePage />
   },
   {
+    path: "/vector-operations",
+    element: <VectorOperations />
+  },
+  {
     path: "/sandbox1",
     element: <SandboxOne />
   },
   {
+    path: "/viewports",
+    element: <Viewports />
+  },
+  {
     path: "/sandbox2",
     element: <SandboxTwo />
+  },
+  {
+    path: "/sandbox3",
+    element: <Sandbox3 />
+  },
+  {
+    path: "/sandbox4",
+    element: <Sandbox4 />
   },
   {
     path: "/debug/controllers",

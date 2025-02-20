@@ -45,29 +45,6 @@ function createRandomThing(id) {
 
 const THINGS = Array.from({ length: 10 }, (_, index) => createRandomThing(`randomThing${index + 1}`));
 
-/**
- * HomePage component renders a 3D scene using react-three-fiber and other related libraries.
- * It provides controls for debugging, camera selection, and control modes.
- * 
- * @component
- * @param {Object} props - The properties passed to the component.
- * @returns {JSX.Element} The rendered HomePage component.
- * 
- * @example
- * <HomePage />
- * 
- * @remarks
- * This component uses the following hooks and components:
- * - `useEditorStore`: Custom hook to manage editor state.
- * - `useControls`: Hook to create UI controls for debugging and settings.
- * - `KeyboardControlsProvider`: Context provider for keyboard controls.
- * - `Canvas`: Main canvas for rendering 3D content.
- * - `Transform`, `Background`, `Environment`, `Selectable`, `Physics`, `Player`, `Thing`, `Plane`, `OrbiterControls`: Custom components for various 3D elements and functionalities.
- * 
- * @todo
- * - Implement additional features and controls as needed.
- * - Optimize performance for larger scenes.
- */
 export default function SandboxOne(props) {
     const { DEBUG,
 

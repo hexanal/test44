@@ -179,10 +179,10 @@ export default function Player(props) {
             longitudinalSpeed = 1 * currentMultiplier;
         }
         if (getKeyboardInputs().LEFTWARD) {
-            lateralSpeed = 0.5 * currentMultiplier;
+            lateralSpeed = -0.5 * currentMultiplier * 1.5;
         }
         if (getKeyboardInputs().RIGHTWARD) {
-            lateralSpeed = -0.5 * currentMultiplier;
+            lateralSpeed = 0.5 * currentMultiplier * 1.5;
         }
         if (getKeyboardInputs().JUMP) {
             jumpSpeed = 1 * jumpForceMagnitude;

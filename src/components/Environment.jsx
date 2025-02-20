@@ -36,7 +36,7 @@ export function Environment() {
     return (
         <>
             {showGrid && <GridHelper />}
-            {showAxesHelper && <axesHelper args={[2]} />}
+            {showAxesHelper && <axesHelper args={[0.75]} />}
             <ambientLight intensity={ambientLightIntensity} />
             <PointLightEntity />
             <DirectionalLightEntity />
